@@ -17,7 +17,24 @@ checkpoints/
 
 # Jupyter
 .ipynb_checkpoints/
-*.ipynb
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.next/
+
+# Build artifacts
+*.csv.bak
+build_output.txt
+preprocess_log.txt
+*_preview.json
+kfood_*.json
+check_csv.py
+csv_output.txt
+verify_output.txt
+
+# Claude internal
+.claude/
 
 # IDE
 .vscode/

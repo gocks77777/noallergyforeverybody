@@ -316,7 +316,7 @@ data/
 | **W4** | 04/15~04/21 | 하이퍼파라미터 튜닝. FAISS centroid 인덱스 구축. ONNX 변환 | 최종 모델 확정, ONNX 파일 Drive 저장 |
 | **W5** | 04/22~04/28 | FastAPI 백엔드: 이미지 추론 엔드포인트 + Open Food Facts 바코드 API + **일반음식점(OA-16094) + 외국인 생활인구(OA-14993) 지도 API** 연동 | `/predict`, `/barcode`, `/restaurants`, `/hotspots` API 작동 확인 |
 | **W6** | 04/29~05/05 | Claude API 연동 + SQLite 캐싱 로직. HF Spaces 배포 | 엔드투엔드 추론 파이프라인 완성 |
-| **W7** | 05/06~05/11 | React PWA 개발. 카메라 이미지 업로드 + 바코드 스캔 (`@zxing/browser`) + **식당 지도 뷰** | 모바일 브라우저에서 전체 기능 동작 |
+| **W7** | 05/06~05/11 | React PWA 개발. 카메라 이미지 업로드 + 바코드 스캔 (`@zxing/browser`) + **식당 지도 뷰** + **다국어 TTS 알레르기 질문 기능** | 모바일 브라우저에서 전체 기능 동작 |
 | **W8** | 05/12~**05/13** | Vercel 배포 확인. HF Spaces warm-up ping 설정. **경진대회 누리집 제출 (마감 05/13 18:00)** | **제출 완료** |
 
 ---
@@ -333,7 +333,43 @@ data/
 
 ---
 
-## 9. 즉시 실행 액션 아이템
+## 9. 추가 기능: 다국어 TTS 알레르기 질문 (W7 구현)
+
+### 개요
+외국인 사용자가 언어를 선택하면 사이트 전체가 해당 언어로 전환되고, 음식 스캔 후 자신의 알레르기 관련 질문을 TTS로 재생할 수 있는 기능.
+
+### 흐름
+```
+사용자: 언어 선택 (영/일/중/스페인어 등) + 알레르기 프로필 입력
+  → 음식 스캔 (이미지 or 바코드)
+  → Claude API: 음식 재료 + 알레르기 조합 → 질문 문장 생성 (선택 언어로)
+  → Web Speech API (TTS): 문장 음성 재생
+```
+
+### 예시
+- 사용자 언어: 영어 / 알레르기: 고추
+- 스캔 음식: 김치찌개
+- TTS 재생: *"Does this dish contain chili pepper?"*
+
+### 구현 스펙
+- **TTS:** 브라우저 내장 `Web Speech API` — 무료, 별도 API 키 불필요
+- **문장 생성:** Claude API (기존 연동에 프롬프트 추가, 추가 비용 미미)
+- **지원 언어 후보:** 영어, 일본어, 중국어(간체), 스페인어, 프랑스어, 아랍어
+- **UI:** 언어 선택 드롭다운 → 사이트 전체 i18n 적용 (`react-i18next`)
+
+### Claude 프롬프트 추가 예시
+```python
+def build_tts_question(food_name: str, user_allergy: str, language: str) -> str:
+    return f"""
+음식: {food_name}, 사용자 알레르기: {user_allergy}
+위 정보를 바탕으로 식당에서 물어볼 수 있는 짧은 질문 1문장을 {language}로 만들어주세요.
+예: "Does this contain {user_allergy}?"
+"""
+```
+
+---
+
+## 10. 즉시 실행 액션 아이템
 
 ```
 === 오늘 (2026-03-25) ===
