@@ -73,14 +73,14 @@ export default function MapPage() {
       const data = await getRestaurants(center.lat, center.lng, radius)
       setRestaurants(data)
       if (data.length === 0) {
-        setError('This area has no restaurant data. Try moving to Seoul.')
+        setError(t('map.no_data_here'))
       }
     } catch (e: any) {
       setError(e.message)
     } finally {
       setLoading(false)
     }
-  }, [radius])
+  }, [radius, t])
 
   // Update markers when restaurants change
   useEffect(() => {
@@ -121,7 +121,7 @@ export default function MapPage() {
           const data = await getRestaurants(lat, lng, radius)
           setRestaurants(data)
           if (data.length === 0) {
-            setError('No restaurants nearby. Data covers Seoul only. Move the map to Seoul and tap "Search this area".')
+            setError(t('map.no_nearby'))
           }
         } catch (e: any) {
           setError(e.message)
@@ -135,7 +135,7 @@ export default function MapPage() {
         setLoading(false)
       },
     )
-  }, [tab, mapInited])
+  }, [tab, mapInited, radius, t])
 
   // Fetch hotspots
   useEffect(() => {
@@ -193,7 +193,7 @@ export default function MapPage() {
               onClick={jumpToSeoul}
               className="ml-auto text-xs text-primary-600 font-medium px-2 py-1 border border-primary-300 rounded-lg hover:bg-primary-50"
             >
-              Go to Seoul
+              {t('map.go_to_seoul')}
             </button>
           </div>
 
@@ -212,13 +212,13 @@ export default function MapPage() {
                 disabled={loading}
                 className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] bg-white shadow-lg px-4 py-2 rounded-full text-sm font-medium text-primary-700 border border-primary-200 hover:bg-primary-50 transition-colors"
               >
-                {loading ? 'Searching...' : 'Search this area'}
+                {loading ? t('map.searching') : t('map.search_here')}
               </button>
             )}
 
             {/* Result count badge */}
             <div className="absolute bottom-3 left-3 z-[1000] bg-white/90 shadow px-3 py-1 rounded-full text-xs text-gray-600">
-              {loading ? 'Loading...' : `${restaurants.length} restaurants`}
+              {loading ? t('scan.loading') : `${restaurants.length}${t('map.restaurant_count')}`}
             </div>
           </div>
 

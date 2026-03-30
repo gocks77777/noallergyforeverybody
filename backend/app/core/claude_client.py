@@ -48,7 +48,10 @@ def analyze_allergens(
         f"Respond in {lang_name}."
     )
 
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return "Claude API key not configured. Please set ANTHROPIC_API_KEY."
+    client = anthropic.Anthropic(api_key=api_key)
     message = client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=256,

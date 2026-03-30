@@ -34,7 +34,12 @@ def get_cache(key: str) -> Optional[dict]:
         row = con.execute(
             "SELECT result FROM predict_cache WHERE key = ?", (key,)
         ).fetchone()
-    return json.loads(row[0]) if row else None
+    if not row:
+        return None
+    try:
+        return json.loads(row[0])
+    except (json.JSONDecodeError, TypeError):
+        return None
 
 
 def set_cache(key: str, result: dict) -> None:

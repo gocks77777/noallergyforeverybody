@@ -5,7 +5,7 @@ GET /hotspots
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.core.data import load_foreign_population, get_top_allergen_foods
+from app.core.data import load_foreign_population, get_allergen_foods_for_dong
 
 router = APIRouter()
 
@@ -28,7 +28,6 @@ def get_hotspots():
 
     # 외국인 수 내림차순 상위 TOP_N
     top_dongs = sorted(population, key=lambda x: x["foreign_count"], reverse=True)[:TOP_N]
-    top_foods = get_top_allergen_foods(limit=5)
 
     # 상대적 threshold (상위 데이터 기준)
     if top_dongs:
@@ -54,7 +53,7 @@ def get_hotspots():
             dong_code=dong["dong_code"],
             foreign_count=round(count),
             risk_level=risk,
-            top_allergen_foods=top_foods,
+            top_allergen_foods=get_allergen_foods_for_dong(dong["dong_code"], limit=5),
         ))
 
     return result

@@ -64,5 +64,7 @@ async def predict_image(
         "claude_analysis": analysis,
     }
 
-    cache_store.set_cache(key, payload)
+    # 분석 실패 시 캐시하지 않음 (다음 요청에서 재시도)
+    if not analysis.startswith("분석 실패"):
+        cache_store.set_cache(key, payload)
     return PredictResponse(**payload, cached=False)

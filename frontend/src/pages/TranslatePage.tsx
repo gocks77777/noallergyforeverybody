@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useLang } from '@/lib/LangContext'
 import { speak, listen } from '@/lib/speech'
 import { translate } from '@/lib/translate'
@@ -30,18 +30,20 @@ export default function TranslatePage() {
   const [speaking, setSpeaking] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [customText, setCustomText] = useState('')
+  const [error, setError] = useState('')
 
-  let nextId = messages.length
+  const nextIdRef = useRef(0)
 
   // 외국인 → 한국어 TTS
   async function foreignerAsk(text: string) {
     setProcessing(true)
+    setError('')
     try {
       // 1. 외국인 언어 → 한국어 번역
       const korean = lang === 'ko' ? text : await translate(text, lang, 'ko')
 
       const msg: Message = {
-        id: ++nextId,
+        id: ++nextIdRef.current,
         from: 'foreigner',
         original: text,
         translated: korean,
@@ -55,6 +57,7 @@ export default function TranslatePage() {
       setSpeaking(false)
     } catch (e) {
       console.error(e)
+      setError(t('translate.error'))
     } finally {
       setProcessing(false)
     }
@@ -63,6 +66,7 @@ export default function TranslatePage() {
   // 한국인 직원 답변 → 외국인 언어로 번역
   async function staffAnswer() {
     setListening(true)
+    setError('')
     try {
       // 1. 한국어 STT
       const korean = await listen('ko')
@@ -71,7 +75,7 @@ export default function TranslatePage() {
       const foreignText = lang === 'ko' ? korean : await translate(korean, 'ko', lang)
 
       const msg: Message = {
-        id: ++nextId,
+        id: ++nextIdRef.current,
         from: 'staff',
         original: korean,
         translated: foreignText,
@@ -84,7 +88,10 @@ export default function TranslatePage() {
       await speak(foreignText, lang)
       setSpeaking(false)
     } catch (e: any) {
-      if (e.message !== 'aborted') console.error(e)
+      if (e.message !== 'aborted') {
+        console.error(e)
+        setError(t('translate.error'))
+      }
     } finally {
       setListening(false)
     }
@@ -112,18 +119,20 @@ export default function TranslatePage() {
       {/* Header */}
       <div className="text-center space-y-1">
         <h2 className="text-lg font-bold text-gray-800">
-          {lang === 'ko' ? '알레르기 통역' : 'Allergy Translator'}
+          {t('translate.title')}
         </h2>
         <p className="text-xs text-gray-500">
-          {lang === 'ko'
-            ? '외국인 ↔ 한국인 실시간 통역'
-            : 'Real-time translation with Korean staff'}
+          {t('translate.subtitle')}
         </p>
       </div>
 
+      {error && (
+        <p className="text-sm text-danger-600 bg-danger-50 rounded-lg px-3 py-2">{error}</p>
+      )}
+
       {/* Quick Presets */}
       <section className="space-y-2">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quick Questions</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('translate.quick')}</p>
         <div className="grid grid-cols-1 gap-1.5">
           {PRESETS.default.map((p) => (
             <button
@@ -142,7 +151,7 @@ export default function TranslatePage() {
       {/* Chat Messages */}
       {messages.length > 0 && (
         <section className="space-y-2">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Conversation</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('translate.conversation')}</p>
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -154,10 +163,10 @@ export default function TranslatePage() {
             >
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-medium text-gray-500">
-                  {msg.from === 'foreigner' ? 'You' : 'Staff'}
+                  {msg.from === 'foreigner' ? t('translate.you') : t('translate.staff')}
                 </span>
                 <span className="text-xs text-gray-300">
-                  {msg.from === 'foreigner' ? `→ Korean` : `→ ${lang.toUpperCase()}`}
+                  {msg.from === 'foreigner' ? t('translate.to_korean') : t('translate.to_lang')}
                 </span>
               </div>
               <p className="text-sm text-gray-800">{msg.original}</p>
@@ -177,7 +186,7 @@ export default function TranslatePage() {
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M6.5 8.8l4.7-3.5v13.4l-4.7-3.5H3.5a1 1 0 01-1-1v-4.4a1 1 0 011-1h3z" />
                 </svg>
-                Replay
+                {t('translate.replay')}
               </button>
             </div>
           ))}
@@ -192,14 +201,14 @@ export default function TranslatePage() {
             <span className="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
             <span className="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
-          <span className="text-sm text-primary-600 font-medium">Speaking...</span>
+          <span className="text-sm text-primary-600 font-medium">{t('translate.speaking')}</span>
         </div>
       )}
 
       {listening && (
         <div className="flex items-center justify-center gap-2 py-2">
           <div className="w-4 h-4 bg-danger-500 rounded-full animate-pulse" />
-          <span className="text-sm text-danger-600 font-medium">Listening to staff...</span>
+          <span className="text-sm text-danger-600 font-medium">{t('translate.listening')}</span>
         </div>
       )}
 
@@ -212,7 +221,7 @@ export default function TranslatePage() {
             value={customText}
             onChange={(e) => setCustomText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendCustom()}
-            placeholder={lang === 'ko' ? '직접 입력...' : 'Type your question...'}
+            placeholder={t('translate.type_question')}
             className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <button
@@ -220,7 +229,7 @@ export default function TranslatePage() {
             disabled={!customText.trim() || processing}
             className="px-4 py-3 bg-primary-600 text-white rounded-xl font-medium disabled:bg-gray-300 shadow-sm"
           >
-            Send
+            {t('translate.send')}
           </button>
         </div>
 
@@ -233,7 +242,7 @@ export default function TranslatePage() {
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
           </svg>
-          {listening ? 'Listening...' : lang === 'ko' ? '직원 답변 듣기' : 'Listen to staff answer'}
+          {listening ? t('translate.listening') : t('translate.listen_staff')}
         </button>
       </div>
     </div>
