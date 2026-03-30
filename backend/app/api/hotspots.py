@@ -9,9 +9,7 @@ from app.core.data import load_foreign_population, get_top_allergen_foods
 
 router = APIRouter()
 
-TOP_N = 20          # 상위 N개 행정동
-HIGH_THRESHOLD  = 5000
-MEDIUM_THRESHOLD = 1000
+TOP_N = 20
 
 
 class Hotspot(BaseModel):
@@ -23,7 +21,7 @@ class Hotspot(BaseModel):
 
 
 @router.get("", response_model=list[Hotspot])
-async def get_hotspots():
+def get_hotspots():
     population = load_foreign_population()
     if not population:
         return []
@@ -32,12 +30,21 @@ async def get_hotspots():
     top_dongs = sorted(population, key=lambda x: x["foreign_count"], reverse=True)[:TOP_N]
     top_foods = get_top_allergen_foods(limit=5)
 
+    # 상대적 threshold (상위 데이터 기준)
+    if top_dongs:
+        max_count = top_dongs[0]["foreign_count"]
+        high_threshold = max_count * 0.5
+        medium_threshold = max_count * 0.2
+    else:
+        high_threshold = 5000
+        medium_threshold = 1000
+
     result = []
     for dong in top_dongs:
         count = dong["foreign_count"]
-        if count >= HIGH_THRESHOLD:
+        if count >= high_threshold:
             risk = "high"
-        elif count >= MEDIUM_THRESHOLD:
+        elif count >= medium_threshold:
             risk = "medium"
         else:
             risk = "low"
@@ -45,7 +52,7 @@ async def get_hotspots():
         result.append(Hotspot(
             dong_name=dong["dong_name"],
             dong_code=dong["dong_code"],
-            foreign_count=count,
+            foreign_count=round(count),
             risk_level=risk,
             top_allergen_foods=top_foods,
         ))

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { getBarcode, type BarcodeResult } from '@/lib/api'
 import { useLang } from '@/lib/LangContext'
 import { BrowserMultiFormatReader } from '@zxing/browser'
@@ -10,12 +10,17 @@ export default function BarcodePage() {
   const [error, setError] = useState('')
   const [result, setResult] = useState<BarcodeResult | null>(null)
   const [scanning, setScanning] = useState(false)
+  const [scanPhase, setScanPhase] = useState<'searching' | 'found' | ''>('')
+  const [foundCode, setFoundCode] = useState('')
   const videoRef = useRef<HTMLVideoElement>(null)
-  const readerRef = useRef<BrowserMultiFormatReader | null>(null)
+  const controlsRef = useRef<{ stop: () => void } | null>(null)
+  const searchingRef = useRef(false)
 
-  async function handleSearch(barcode?: string) {
-    const trimmed = (barcode ?? code).trim()
+  const doSearch = useCallback(async (barcode: string) => {
+    if (searchingRef.current) return
+    const trimmed = barcode.trim()
     if (!trimmed) return
+    searchingRef.current = true
     setLoading(true)
     setError('')
     setResult(null)
@@ -26,48 +31,60 @@ export default function BarcodePage() {
       setError(e.message || 'Lookup failed')
     } finally {
       setLoading(false)
+      searchingRef.current = false
+    }
+  }, [])
+
+  function stopScan() {
+    setScanning(false)
+    setScanPhase('')
+    setFoundCode('')
+    if (controlsRef.current) {
+      controlsRef.current.stop()
+      controlsRef.current = null
+    }
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream
+      stream.getTracks().forEach((track) => track.stop())
+      videoRef.current.srcObject = null
     }
   }
 
   function startScan() {
     setScanning(true)
+    setScanPhase('searching')
+    setFoundCode('')
     setError('')
     setResult(null)
-  }
-
-  function stopScan() {
-    setScanning(false)
-    if (readerRef.current) {
-      // stop all video tracks
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream
-        stream.getTracks().forEach((track) => track.stop())
-        videoRef.current.srcObject = null
-      }
-    }
   }
 
   useEffect(() => {
     if (!scanning || !videoRef.current) return
 
     const reader = new BrowserMultiFormatReader()
-    readerRef.current = reader
 
-    reader.decodeFromVideoDevice(undefined, videoRef.current, (res, err) => {
-      if (res) {
+    reader.decodeFromVideoDevice(undefined, videoRef.current, (res) => {
+      if (res && scanPhase === 'searching') {
         const text = res.getText()
+        setFoundCode(text)
         setCode(text)
-        stopScan()
-        handleSearch(text)
+        setScanPhase('found')
+
+        // 1.5초 동안 성공 화면 보여준 후 카메라 종료 + 검색
+        setTimeout(() => {
+          stopScan()
+          doSearch(text)
+        }, 1500)
       }
+    }).then((controls) => {
+      controlsRef.current = controls
     }).catch(() => {
       setError('Camera access denied')
       setScanning(false)
+      setScanPhase('')
     })
 
-    return () => {
-      stopScan()
-    }
+    return () => { stopScan() }
   }, [scanning])
 
   return (
@@ -80,13 +97,36 @@ export default function BarcodePage() {
         {scanning ? (
           <div className="relative rounded-2xl overflow-hidden bg-black aspect-[4/3]">
             <video ref={videoRef} className="w-full h-full object-cover" />
-            {/* Scan overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-64 h-40 border-2 border-white/70 rounded-xl" />
-            </div>
+
+            {scanPhase === 'searching' ? (
+              /* Searching overlay */
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="w-64 h-40 border-2 border-white/70 rounded-xl relative overflow-hidden">
+                  <div className="absolute left-0 right-0 h-0.5 bg-primary-400 animate-[scan_2s_ease-in-out_infinite]" />
+                </div>
+                <p className="mt-3 text-white text-sm bg-black/50 px-4 py-1.5 rounded-full animate-pulse">
+                  Scanning...
+                </p>
+              </div>
+            ) : (
+              /* Found overlay */
+              <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
+                <div className="w-64 h-40 border-3 border-primary-400 rounded-xl flex items-center justify-center">
+                  <svg className="w-16 h-16 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div className="mt-3 bg-primary-500 text-white px-5 py-2 rounded-full text-center">
+                  <p className="font-bold text-sm">Scan Success!</p>
+                  <p className="text-xs text-primary-100">{foundCode}</p>
+                </div>
+                <p className="mt-2 text-white/70 text-xs animate-pulse">Loading...</p>
+              </div>
+            )}
+
             <button
               onClick={stopScan}
-              className="absolute top-3 right-3 bg-black/50 text-white px-3 py-1.5 rounded-lg text-sm"
+              className="absolute top-3 right-3 bg-black/60 text-white px-4 py-2 rounded-xl text-sm font-medium"
             >
               Cancel
             </button>
@@ -112,11 +152,11 @@ export default function BarcodePage() {
             placeholder={t('barcode.placeholder')}
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyDown={(e) => e.key === 'Enter' && doSearch(code)}
             className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
           <button
-            onClick={() => handleSearch()}
+            onClick={() => doSearch(code)}
             disabled={loading || !code.trim()}
             className="px-5 py-3 bg-primary-600 text-white rounded-xl font-medium disabled:bg-gray-300 transition-colors"
           >

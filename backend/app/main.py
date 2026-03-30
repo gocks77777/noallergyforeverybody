@@ -5,11 +5,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import predict, barcode, restaurants, hotspots
 from app.core.model import startup_load
+from app.core.data import load_restaurants, load_foreign_population
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    startup_load()      # ONNX + label_map 로드 (파일 없으면 스킵)
+    startup_load()          # ONNX + label_map 로드
+    load_restaurants()      # CSV 미리 파싱 (12만개, 첫 요청 지연 방지)
+    load_foreign_population()
     yield
 
 

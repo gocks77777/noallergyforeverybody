@@ -8,3 +8,8 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+@keyframes scan {
+  0%, 100% { top: 0; }
+  50% { top: calc(100% - 2px); }
+}

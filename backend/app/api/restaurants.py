@@ -19,7 +19,7 @@ class Restaurant(BaseModel):
 
 
 @router.get("", response_model=list[Restaurant])
-async def get_restaurants(
+def get_restaurants(
     lat: float = Query(..., description="위도"),
     lng: float = Query(..., description="경도"),
     radius: int = Query(500, description="반경(m)", ge=100, le=5000),
