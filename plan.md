@@ -1,6 +1,6 @@
 # Project: Allergy Scan (AAS)
 **Concept:** 한국 음식 특화 AI 알레르기 안전 가이드 (서울시 데이터 경진대회 창업 부문 출품작)
-**Last Updated:** 2026-03-25 (Claude Review v2.0 - 결정사항 확정)
+**Last Updated:** 2026-03-30 (v3.0 - 진행상황 반영 + 로드맵 재배정)
 
 ---
 
@@ -61,7 +61,7 @@
 - **Frontend:** React, Tailwind CSS, PWA
 - **Deep Learning:** PyTorch, HuggingFace Transformers (`ViTForImageClassification`)
 - **Model Engine:** ONNX Runtime (INT8 Quantized)
-- **Database:** SQLite (캐시), FAISS (임베딩 Vector DB)
+- **Database:** SQLite (캐시)
 - **Infrastructure:** Colab Free T4 (학습), Vercel (프론트), HF Spaces (백엔드)
 
 ---
@@ -304,20 +304,22 @@ data/
 
 ---
 
-## 7. 8-Week Implementation Roadmap (v2.0 확정)
+## 7. 8-Week Implementation Roadmap (v3.0 - 2026-03-30 업데이트)
 
-**마감: 2026-05-13 18:00** | 오늘: 2026-03-25 | 남은 기간: 7주
+**마감: 2026-05-13 18:00** | 업데이트: 2026-03-30 | 남은 기간: 44일 (6주+)
 
-| 주차 | 기간 | 작업 | 핵심 체크포인트 |
+| 주차 | 기간 | 작업 | 상태 |
 |---|---|---|---|
-| **W1** | 03/25~03/31 | AI Hub 승인 대기 중 → Kaggle Korean + 크롤링으로 50장/클래스 확보. 전처리 파이프라인 완성. **열린데이터광장 데이터 다운로드 (OA-20918, OA-16094)** | `preprocess.py` 완성, Drive에 데이터 업로드 |
-| **W2** | 04/01~04/07 | AI Hub 승인 시 데이터 병합. 미승인 시 크롤링 강화 (네이버 API). 데이터 검증 (클래스별 분포 시각화). **공공급식 식재료 → 음식-재료 매핑 테이블 구축** | 50K장 확보, 클래스 밸런스 확인, `label_ingredient_map.json` 완성 |
-| **W3** | 04/08~04/14 | ViT Fine-tuning 시작. FP16 + Cosine LR. 에폭마다 체크포인트 Drive 저장 | Val Acc >75% 달성 확인 |
-| **W4** | 04/15~04/21 | 하이퍼파라미터 튜닝. FAISS centroid 인덱스 구축. ONNX 변환 | 최종 모델 확정, ONNX 파일 Drive 저장 |
-| **W5** | 04/22~04/28 | FastAPI 백엔드: 이미지 추론 엔드포인트 + Open Food Facts 바코드 API + **일반음식점(OA-16094) + 외국인 생활인구(OA-14993) 지도 API** 연동 | `/predict`, `/barcode`, `/restaurants`, `/hotspots` API 작동 확인 |
-| **W6** | 04/29~05/05 | Claude API 연동 + SQLite 캐싱 로직. HF Spaces 배포 | 엔드투엔드 추론 파이프라인 완성 |
-| **W7** | 05/06~05/11 | React PWA 개발. 카메라 이미지 업로드 + 바코드 스캔 (`@zxing/browser`) + **식당 지도 뷰** + **다국어 TTS 알레르기 질문 기능** | 모바일 브라우저에서 전체 기능 동작 |
-| **W8** | 05/12~**05/13** | Vercel 배포 확인. HF Spaces warm-up ping 설정. **경진대회 누리집 제출 (마감 05/13 18:00)** | **제출 완료** |
+| **W1** | 03/25~03/31 | 데이터 수집, 전처리, 열린데이터광장 다운로드, GitHub 레포, label_ingredient_map 구축 | **완료** |
+| **W2** | 04/01~04/07 | ~~AI Hub 병합~~ → 모델 학습 완료됨. **이번 주 실제 할 일:** 모델 로컬 배치, CSV 연결, 프론트↔백 연동 테스트, i18n | 진행 예정 |
+| **W3** | 04/08~04/14 | ~~ViT 학습~~ → 이미 완료. **실제:** 바코드 카메라 스캔, TTS/STT 통역 기능, UX 개선 | 재배정 |
+| **W4** | 04/15~04/21 | ~~ONNX 변환~~ → 이미 완료. **실제:** 모델 정확도 검증, 필요시 재학습, 프론트 다국어 완성 | 재배정 |
+| **W5** | 04/22~04/28 | HF Spaces 배포 (Dockerfile), 백엔드 통합 테스트, 엔드투엔드 파이프라인 확인 | 예정 |
+| **W6** | 04/29~05/05 | Vercel 프론트 배포, Claude API 실 테스트, 모바일 브라우저 QA | 예정 |
+| **W7** | 05/06~05/11 | 최종 버그 수정, 성능 최적화, 경진대회 제출 서류 준비 | 예정 |
+| **W8** | 05/12~**05/13** | **경진대회 누리집 제출 (마감 05/13 18:00)** | 예정 |
+
+> **참고:** W1~W4 원래 계획보다 2~3주 앞서 진행됨. 학습/전처리가 조기 완료되어 W2~W4는 UX 개선 및 배포 준비로 재배정.
 
 ---
 
@@ -388,26 +390,105 @@ def build_tts_question(food_name: str, user_allergy: str, language: str) -> str:
 
 ---
 
-## 10. 즉시 실행 액션 아이템
+## 10. 진행 상황 (2026-03-30 기준)
+
+### 전체 진행률: ~55-60%
+
+| 영역 | 진행률 | 상태 |
+|---|---|---|
+| 데이터 파이프라인 (W1-W2) | **95%** | 150클래스 134,476장 전처리 완료, CSV 3건 다운로드 완료 |
+| 모델 학습 (W3-W4) | **80%** | Colab ViT 학습 완료, ONNX 변환 완료, Google Drive에 저장 |
+| 백엔드 API (W5) | **65%** | 4개 엔드포인트 코드 완성, 모델 파일 로컬 배치 대기 |
+| Claude API 연동 (W6) | **40%** | claude_client.py + cache.py 완성, 실 API 테스트 미진행 |
+| 프론트엔드 (W7) | **50%** | React PWA 4페이지 완성, 백엔드 연동 테스트 미진행 |
+| 배포 (W8) | **10%** | GitHub 푸시 완료, Vercel/HF Spaces 미배포 |
+
+### 완료된 작업
 
 ```
-=== 오늘 (2026-03-25) ===
-[ ] 경진대회 창업 부문 참가 신청 (열린데이터광장 누리집 > 소식&참여 > 경진대회)
-[ ] AI Hub (aihub.or.kr) 한국 음식 데이터셋 신청
-[ ] Google Drive 폴더 구조 생성 (/allergydata/data/, /checkpoints/, /models/)
-[ ] 열린데이터광장 데이터셋 다운로드
-    - 서울시 공공급식 식재료 정보 (OA-20918) → label_ingredient_map.json 변환
-    - 서울시 일반음식점 인허가 정보 (OA-16094) → 식당 지도용
-    - 행정동 단위 단기체류 외국인 생활인구 (OA-14993) → 외국인 밀집 지역 경보용 [가점]
+=== W1 (03/25~03/31) — 완료 ===
+[x] 경진대회 창업 부문 참가 신청
+[x] AI Hub 한국 음식 데이터셋 신청 + 승인 + 다운로드
+[x] Google Drive 폴더 구조 생성 (/allergydata/data/, /checkpoints/, /models/)
+[x] 열린데이터광장 데이터셋 3건 다운로드 (D:/noallergyforeveryone/)
+    - 서울시 공공급식 식재료 정보 (OA-20918) — 920KB
+    - 서울시 일반음식점 인허가 정보 (OA-16094) — 211MB
+    - 행정동 단위 단기체류 외국인 생활인구 (OA-14993) — 14MB
+[x] preprocess.py 작성 + 실행 완료
+    - 150클래스, 150,507장 입력 → 134,476장 저장 (블러 6,872 제거, 중복 9,102 제거)
+[x] GitHub 레포 생성 + CONTRIBUTING.md
+[x] label_ingredient_map.json 229개 음식 구축 (목표 200개 초과 달성)
 
-=== W1 (03/25~03/31) ===
-[ ] Kaggle Korean Food 데이터 다운로드 + preprocess.py 작성
-[ ] GitHub 레포 생성 + CONTRIBUTING.md 초안 작성
-[ ] label_ingredient_map.json 구축 (OA-20918 기반)
+=== 모델 학습 — 완료 ===
+[x] ViT fine-tuning (Colab T4, FP16, 10 epochs)
+[x] FAISS centroid 인덱스 구축
+[x] ONNX FP32 + INT8 양자화 변환
+[x] Google Drive allergydata/models/에 저장 완료
 
-=== W3 시작 ===
-[ ] ViT 학습 코드 (HuggingFace Trainer 기반)
+=== 백엔드 — 완료 ===
+[x] FastAPI 앱 구조 (main.py + 4 라우터)
+[x] POST /predict — 이미지 → 음식명 + 알레르기 분석
+[x] GET /barcode/{code} — Open Food Facts 연동
+[x] GET /restaurants — 위치 기반 식당 검색 (OA-16094)
+[x] GET /hotspots — 외국인 밀집 지역 경보 (OA-14993)
+[x] claude_client.py — 10개 언어 지원
+[x] cache.py — SQLite 캐시 (중복 쿼리 $0)
+[x] data.py — CSV 로더 + Haversine 거리 계산
+[x] model.py — ONNX 추론 (softmax 직접 분류, FAISS 제거)
 
-=== 마감 ===
-[ ] 2026-05-13 18:00 경진대회 제출 완료
+=== 프론트엔드 — 완료 ===
+[x] Vite + React + TypeScript + Tailwind 초기화
+[x] PWA manifest + service worker (vite-plugin-pwa)
+[x] Layout (헤더 + 하단 네비게이션 바: Scan / Barcode / Map)
+[x] HomePage — 카메라 촬영/이미지 업로드 + 알레르기 13종 선택 + 분석 버튼
+[x] ResultPage — 음식명, 알레르기 경고, Top-3 예측, 재료, Claude 분석
+[x] BarcodePage — 바코드 번호 입력 → Open Food Facts 조회
+[x] MapPage — 주변 식당 리스트 + 외국인 밀집 핫스팟 (탭 전환)
+[x] api.ts — 백엔드 4개 API 호출 클라이언트
 ```
+
+### 남은 작업 (우선순위순)
+
+```
+=== 즉시 (이번 주) ===
+[ ] Google Drive에서 ONNX 모델 다운로드 → backend/models/ 배치
+    - model_fp32.onnx → backend/models/model_fp32.onnx
+    - faiss_labels.json → backend/models/labels.json (이름 변경)
+[ ] D드라이브 CSV → backend/data/ 연결 (복사 or 환경변수 경로 설정)
+    - 서울시 일반음식점 인허가 정보.csv → seoul_restaurants.csv
+    - 행정동 단위 서울 생활인구.csv → seoul_foreign_population.csv
+[ ] 백엔드 서버 통합 테스트 (uvicorn 실행 + 실제 이미지 /predict 호출)
+
+=== W2 (04/01~04/07) ===
+[ ] 프론트 ↔ 백엔드 연동 테스트 (npm run dev + uvicorn 동시 실행)
+[ ] ANTHROPIC_API_KEY 환경변수 설정 + Claude 분석 실 테스트
+[ ] 프론트엔드 한국어 i18n 적용 (react-i18next)
+[ ] 바코드 카메라 스캔 연동 (@zxing/browser)
+
+=== W3~W4 (04/08~04/21) — 이미 학습 완료, 품질 개선 ===
+[ ] 모델 정확도 검증 (Val Acc 확인, 75% 미달 시 튜닝)
+[ ] 프론트엔드 UX 개선 (로딩 애니메이션, 에러 처리 강화)
+[ ] 다국어 TTS/STT 양방향 통역 기능 구현 (Web Speech API + DeepL)
+
+=== W5~W6 (04/22~05/05) — 배포 ===
+[ ] HF Spaces 배포 (Dockerfile 작성 + 환경변수 설정)
+[ ] Vercel 프론트엔드 배포 + 커스텀 도메인
+[ ] Vercel Cron warm-up 설정 확인
+[ ] 엔드투엔드 테스트 (모바일 브라우저에서 전체 기능)
+
+=== W7~W8 (05/06~05/13) — 최종 점검 ===
+[ ] 경진대회 제출 서류 준비 (서비스 설명서, 스크린샷)
+[ ] 최종 버그 수정 + 성능 최적화
+[ ] 경진대회 누리집 제출 (마감: 05/13 18:00)
+```
+
+### 파일 위치 참조
+
+| 산출물 | 위치 | 비고 |
+|---|---|---|
+| 전처리된 이미지 (150클래스) | `D:/noallergyforeveryone/data/processed/` | 134,476장 |
+| 전처리 통계 | `D:/noallergyforeveryone/data/processed/stats.json` | 클래스별 blur/dup 통계 |
+| 열린데이터광장 CSV 원본 | `D:/noallergyforeveryone/` | 한글 파일명 그대로 |
+| ONNX 모델 + FAISS | `Google Drive: allergydata/models/` | 로컬 배치 필요 |
+| label_ingredient_map.json | `backend/data/label_ingredient_map.json` | 229개 음식 |
+| 프론트엔드 빌드 | `frontend/dist/` (180KB JS + 13KB CSS) | Vite 빌드 OK |
