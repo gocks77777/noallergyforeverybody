@@ -54,11 +54,14 @@ def get_nearby_restaurants(
     lat: float, lng: float, radius: int = 500, limit: int = 20
 ) -> list[dict]:
     all_rows = load_restaurants()
-    nearby = [
-        r for r in all_rows
-        if haversine(lat, lng, r["lat"], r["lng"]) <= radius
-    ]
-    nearby.sort(key=lambda r: haversine(lat, lng, r["lat"], r["lng"]))
+    nearby = []
+    for r in all_rows:
+        dist = haversine(lat, lng, r["lat"], r["lng"])
+        if dist <= radius:
+            nearby.append({**r, "_dist": dist})
+    nearby.sort(key=lambda r: r["_dist"])
+    for r in nearby:
+        del r["_dist"]
     return nearby[:limit]
 
 
