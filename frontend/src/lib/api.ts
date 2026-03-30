@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL ?? '/api'
+const BASE = import.meta.env.VITE_API_URL ?? 'https://cleaningsource-allergy-scan-api.hf.space'
 
 export interface PredictResult {
   food_name: string

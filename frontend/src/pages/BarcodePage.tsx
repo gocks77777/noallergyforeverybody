@@ -28,7 +28,7 @@ export default function BarcodePage() {
       const data = await getBarcode(trimmed)
       setResult(data)
     } catch (e: any) {
-      setError(e.message || 'Lookup failed')
+      setError(e.message || t('translate.error'))
     } finally {
       setLoading(false)
       searchingRef.current = false
@@ -169,7 +169,7 @@ export default function BarcodePage() {
 
       {result && (
         <section className="bg-white rounded-xl shadow p-4 space-y-4">
-          <h3 className="font-bold text-gray-800">{result.product_name || 'Unknown Product'}</h3>
+          <h3 className="font-bold text-gray-800">{result.product_name || t('barcode.title')}</h3>
           <p className="text-xs text-gray-400">Barcode: {result.barcode}</p>
 
           {result.allergens.length > 0 ? (

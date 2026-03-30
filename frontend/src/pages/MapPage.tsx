@@ -113,7 +113,7 @@ export default function MapPage() {
         userMarkerRef.current = L.circleMarker([lat, lng], {
           radius: 8, fillColor: '#3b82f6', fillOpacity: 1,
           color: '#fff', weight: 3,
-        }).bindPopup('You are here').addTo(map)
+        }).addTo(map)
 
         map.flyTo([lat, lng], 15, { duration: 1 })
 

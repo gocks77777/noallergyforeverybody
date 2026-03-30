@@ -43,7 +43,7 @@ export default function HomePage() {
       const result = await predictImage(file, [...allergies].join(','), lang)
       navigate('/result', { state: { result, preview } })
     } catch (e: any) {
-      setError(e.message || 'Analysis failed')
+      setError(e.message || t('translate.error'))
     } finally {
       setLoading(false)
     }
