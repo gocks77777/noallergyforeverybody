@@ -1,14 +1,16 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { predictImage, type PredictResult } from '@/lib/api'
+import { predictImage } from '@/lib/api'
+import { useLang } from '@/lib/LangContext'
 
-const ALLERGY_OPTIONS = [
+const ALLERGY_KEYS = [
   '계란', '우유', '밀', '대두', '땅콩', '견과류',
   '생선', '갑각류', '조개류', '쇠고기', '돼지고기', '닭고기', '토마토',
 ]
 
 export default function HomePage() {
   const navigate = useNavigate()
+  const { t, lang } = useLang()
   const fileRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null)
@@ -38,7 +40,7 @@ export default function HomePage() {
     setLoading(true)
     setError('')
     try {
-      const result = await predictImage(file, [...allergies].join(','))
+      const result = await predictImage(file, [...allergies].join(','), lang)
       navigate('/result', { state: { result, preview } })
     } catch (e: any) {
       setError(e.message || 'Analysis failed')
@@ -62,8 +64,8 @@ export default function HomePage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <circle cx="12" cy="13" r="3" />
             </svg>
-            <p className="text-sm font-medium">Tap to take a photo or upload</p>
-            <p className="text-xs">Supports JPG, PNG</p>
+            <p className="text-sm font-medium">{t('home.upload')}</p>
+            <p className="text-xs">{t('home.supported')}</p>
           </div>
         )}
         <input
@@ -78,9 +80,9 @@ export default function HomePage() {
 
       {/* Allergy Selection */}
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-gray-700">My Allergies</h2>
+        <h2 className="text-sm font-semibold text-gray-700">{t('home.allergies')}</h2>
         <div className="flex flex-wrap gap-2">
-          {ALLERGY_OPTIONS.map((a) => (
+          {ALLERGY_KEYS.map((a) => (
             <button
               key={a}
               onClick={() => toggleAllergy(a)}
@@ -90,18 +92,16 @@ export default function HomePage() {
                   : 'bg-white text-gray-600 border-gray-300 hover:border-primary-400'
               }`}
             >
-              {a}
+              {t(`allergen.${a}`)}
             </button>
           ))}
         </div>
       </section>
 
-      {/* Error */}
       {error && (
         <p className="text-sm text-danger-600 bg-danger-50 rounded-lg px-3 py-2">{error}</p>
       )}
 
-      {/* Analyze Button */}
       <button
         onClick={handleAnalyze}
         disabled={!file || loading}
@@ -113,10 +113,10 @@ export default function HomePage() {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            Analyzing...
+            {t('home.analyzing')}
           </>
         ) : (
-          'Analyze Food'
+          t('home.analyze')
         )}
       </button>
     </div>

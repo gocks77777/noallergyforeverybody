@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getRestaurants, getHotspots, type Restaurant, type Hotspot } from '@/lib/api'
+import { useLang } from '@/lib/LangContext'
 
 const RISK_STYLE = {
   high:   'bg-danger-500 text-white',
@@ -8,6 +9,7 @@ const RISK_STYLE = {
 } as const
 
 export default function MapPage() {
+  const { t } = useLang()
   const [tab, setTab] = useState<'restaurants' | 'hotspots'>('restaurants')
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [hotspots, setHotspots] = useState<Hotspot[]>([])
@@ -15,12 +17,10 @@ export default function MapPage() {
   const [error, setError] = useState('')
   const [radius, setRadius] = useState(500)
 
-  // Get nearby restaurants based on current location
   useEffect(() => {
     if (tab !== 'restaurants') return
     setLoading(true)
     setError('')
-
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
@@ -33,13 +33,12 @@ export default function MapPage() {
         }
       },
       () => {
-        setError('Location access denied. Please allow location permission.')
+        setError(t('map.location_denied'))
         setLoading(false)
       },
     )
   }, [tab, radius])
 
-  // Fetch hotspots
   useEffect(() => {
     if (tab !== 'hotspots') return
     setLoading(true)
@@ -52,44 +51,35 @@ export default function MapPage() {
 
   return (
     <div className="p-4 space-y-4">
-      {/* Tab */}
       <div className="flex gap-2">
-        {(['restaurants', 'hotspots'] as const).map((t) => (
+        {(['restaurants', 'hotspots'] as const).map((tb) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tb}
+            onClick={() => setTab(tb)}
             className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              tab === t ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600'
+              tab === tb ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600'
             }`}
           >
-            {t === 'restaurants' ? 'Nearby Restaurants' : 'Foreigner Hotspots'}
+            {tb === 'restaurants' ? t('map.restaurants') : t('map.hotspots')}
           </button>
         ))}
       </div>
 
       {error && <p className="text-sm text-danger-600 bg-danger-50 rounded-lg px-3 py-2">{error}</p>}
 
-      {/* Restaurants Tab */}
       {tab === 'restaurants' && (
         <>
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-500">Radius:</label>
-            <select
-              value={radius}
-              onChange={(e) => setRadius(Number(e.target.value))}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
-            >
+            <label className="text-sm text-gray-500">{t('map.radius')}:</label>
+            <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm">
               <option value={200}>200m</option>
               <option value={500}>500m</option>
               <option value={1000}>1km</option>
               <option value={2000}>2km</option>
             </select>
           </div>
-
-          {loading ? (
-            <Skeleton count={5} />
-          ) : restaurants.length === 0 ? (
-            <p className="text-center text-gray-400 py-10">No restaurants found nearby.</p>
+          {loading ? <Skeleton count={5} /> : restaurants.length === 0 ? (
+            <p className="text-center text-gray-400 py-10">{t('map.no_restaurants')}</p>
           ) : (
             <ul className="space-y-2">
               {restaurants.map((r, i) => (
@@ -106,13 +96,10 @@ export default function MapPage() {
         </>
       )}
 
-      {/* Hotspots Tab */}
       {tab === 'hotspots' && (
         <>
-          {loading ? (
-            <Skeleton count={5} />
-          ) : hotspots.length === 0 ? (
-            <p className="text-center text-gray-400 py-10">No hotspot data available.</p>
+          {loading ? <Skeleton count={5} /> : hotspots.length === 0 ? (
+            <p className="text-center text-gray-400 py-10">{t('map.no_hotspots')}</p>
           ) : (
             <ul className="space-y-2">
               {hotspots.map((h, i) => (
@@ -123,14 +110,10 @@ export default function MapPage() {
                       {h.risk_level.toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Foreign population: {h.foreign_count.toLocaleString()}
-                  </p>
+                  <p className="text-xs text-gray-500">{t('map.foreign_pop')}: {h.foreign_count.toLocaleString()}</p>
                   <div className="flex flex-wrap gap-1">
                     {h.top_allergen_foods.map((f) => (
-                      <span key={f} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-                        {f}
-                      </span>
+                      <span key={f} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{f}</span>
                     ))}
                   </div>
                 </li>
