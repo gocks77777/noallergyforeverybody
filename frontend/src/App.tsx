@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage'
 import ResultPage from './pages/ResultPage'
 import BarcodePage from './pages/BarcodePage'
 import MapPage from './pages/MapPage'
+import TranslatePage from './pages/TranslatePage'
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(() => !hasSelectedLang())
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/result" element={<ResultPage />} />
             <Route path="/barcode" element={<BarcodePage />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/translate" element={<TranslatePage />} />
           </Route>
         </Routes>
       )}
