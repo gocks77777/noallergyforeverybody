@@ -1,19 +1,15 @@
 """
-app/core/model.py — ONNX 모델 + FAISS 인덱스 싱글턴 로더
-W4에서 생성된 model_int8.onnx, faiss_index.bin, label_ingredient_map.json 사용
+app/core/model.py — ONNX 모델 싱글턴 로더 (softmax 분류)
+W4에서 생성된 model_fp32.onnx, labels.json, label_ingredient_map.json 사용
 """
-import hashlib
 import io
 import json
 import os
-from functools import lru_cache
-from typing import Optional
 
 import numpy as np
 from PIL import Image
 
-MODEL_PATH  = os.getenv("MODEL_PATH",  "models/model_int8.onnx")
-FAISS_PATH  = os.getenv("FAISS_PATH",  "models/faiss_index.bin")
+MODEL_PATH  = os.getenv("MODEL_PATH",  "models/model_fp32.onnx")
 MAP_PATH    = os.getenv("MAP_PATH",    "data/label_ingredient_map.json")
 LABELS_PATH = os.getenv("LABELS_PATH", "models/labels.json")
 
@@ -29,7 +25,6 @@ class ModelNotReadyError(RuntimeError):
 class AllergyModel:
     def __init__(self):
         self._session = None
-        self._index   = None
         self._labels: list[str] = []
         self._ing_map: dict     = {}
         self._ready = False
@@ -37,9 +32,8 @@ class AllergyModel:
     def load(self):
         """서버 시작 시 1회 호출. 파일 없으면 NotReady 상태 유지."""
         import onnxruntime as ort
-        import faiss
 
-        missing = [p for p in (MODEL_PATH, FAISS_PATH, MAP_PATH, LABELS_PATH)
+        missing = [p for p in (MODEL_PATH, MAP_PATH, LABELS_PATH)
                    if not os.path.exists(p)]
         if missing:
             print(f"[model] 모델 파일 없음 (W4 완료 후 사용 가능): {missing}")
@@ -49,7 +43,6 @@ class AllergyModel:
             MODEL_PATH,
             providers=["CPUExecutionProvider"],
         )
-        self._index = faiss.read_index(FAISS_PATH)
 
         with open(LABELS_PATH, encoding="utf-8") as f:
             self._labels = json.load(f)          # ["김치찌개", "불고기", ...]
@@ -74,17 +67,17 @@ class AllergyModel:
         pixel_values = self._preprocess(img_bytes)
         input_name   = self._session.get_inputs()[0].name
 
-        # ViT hidden_state → (1, 768) CLS 토큰
+        # logits → softmax → top-k
         outputs = self._session.run(None, {input_name: pixel_values})
-        embedding = outputs[0][:, 0, :]     # CLS token, shape (1, 768)
-        embedding = embedding / (np.linalg.norm(embedding, axis=1, keepdims=True) + 1e-8)
-
-        distances, indices = self._index.search(embedding.astype(np.float32), top_k)
+        logits = outputs[0][0]              # (150,)
+        exp_logits = np.exp(logits - logits.max())
+        probs = exp_logits / exp_logits.sum()
+        top_ids = np.argsort(probs)[::-1][:top_k]
 
         top3 = []
-        for dist, idx in zip(distances[0], indices[0]):
+        for idx in top_ids:
             label = self._labels[idx]
-            score = float(1 / (1 + dist))   # L2 거리 → 유사도
+            score = float(probs[idx])
             top3.append({"label": label, "score": round(score, 4)})
 
         best = top3[0]["label"]
