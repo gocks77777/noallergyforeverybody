@@ -390,95 +390,74 @@ def build_tts_question(food_name: str, user_allergy: str, language: str) -> str:
 
 ---
 
-## 10. 진행 상황 (2026-03-30 기준)
+## 10. 진행 상황 (2026-03-30 23:00 기준)
 
-### 전체 진행률: ~55-60%
+### 전체 진행률: ~75-80%
 
 | 영역 | 진행률 | 상태 |
 |---|---|---|
-| 데이터 파이프라인 (W1-W2) | **95%** | 150클래스 134,476장 전처리 완료, CSV 3건 다운로드 완료 |
-| 모델 학습 (W3-W4) | **80%** | Colab ViT 학습 완료, ONNX 변환 완료, Google Drive에 저장 |
-| 백엔드 API (W5) | **65%** | 4개 엔드포인트 코드 완성, 모델 파일 로컬 배치 대기 |
-| Claude API 연동 (W6) | **40%** | claude_client.py + cache.py 완성, 실 API 테스트 미진행 |
-| 프론트엔드 (W7) | **50%** | React PWA 4페이지 완성, 백엔드 연동 테스트 미진행 |
+| 데이터 파이프라인 (W1-W2) | **100%** | 150클래스 134,476장 전처리 완료, CSV 3건 로컬 배치 완료 |
+| 모델 학습 (W3-W4) | **100%** | Colab 학습 완료, ONNX 로컬 배치, 추론 10/10 정확도 검증 |
+| 백엔드 API (W5) | **90%** | 4개 엔드포인트 동작 확인, 바코드 3단 fallback, CSV 실데이터 연동 |
+| Claude API 연동 (W6) | **50%** | 코드 완성, 바코드 Claude 추론 추가, API 키만 넣으면 즉시 가동 |
+| 프론트엔드 (W7) | **85%** | 5페이지 + 10개 언어 i18n + TTS/STT 통역 + 바코드 카메라 + 지도 |
 | 배포 (W8) | **10%** | GitHub 푸시 완료, Vercel/HF Spaces 미배포 |
 
 ### 완료된 작업
 
 ```
-=== W1 (03/25~03/31) — 완료 ===
-[x] 경진대회 창업 부문 참가 신청
-[x] AI Hub 한국 음식 데이터셋 신청 + 승인 + 다운로드
-[x] Google Drive 폴더 구조 생성 (/allergydata/data/, /checkpoints/, /models/)
-[x] 열린데이터광장 데이터셋 3건 다운로드 (D:/noallergyforeveryone/)
-    - 서울시 공공급식 식재료 정보 (OA-20918) — 920KB
-    - 서울시 일반음식점 인허가 정보 (OA-16094) — 211MB
-    - 행정동 단위 단기체류 외국인 생활인구 (OA-14993) — 14MB
-[x] preprocess.py 작성 + 실행 완료
-    - 150클래스, 150,507장 입력 → 134,476장 저장 (블러 6,872 제거, 중복 9,102 제거)
-[x] GitHub 레포 생성 + CONTRIBUTING.md
-[x] label_ingredient_map.json 229개 음식 구축 (목표 200개 초과 달성)
+=== 데이터 — 완료 ===
+[x] AI Hub 한국 음식 데이터셋 승인 + 다운로드
+[x] 열린데이터광장 CSV 3건 다운로드 + backend/data/ 배치
+[x] preprocess.py 실행 (150클래스, 134,476장)
+[x] label_ingredient_map.json 229개 음식 구축
+[x] 행정동코드→동명 매핑 432개 (dong_names.json)
 
-=== 모델 학습 — 완료 ===
+=== 모델 — 완료 ===
 [x] ViT fine-tuning (Colab T4, FP16, 10 epochs)
-[x] FAISS centroid 인덱스 구축
-[x] ONNX FP32 + INT8 양자화 변환
-[x] Google Drive allergydata/models/에 저장 완료
+[x] ONNX FP32 변환 + 로컬 배치 (backend/models/)
+[x] 추론 테스트 10/10 정확도, 알레르겐 매핑 정상
+[x] NFC 유니코드 정규화, float32 캐스팅 버그 수정
 
 === 백엔드 — 완료 ===
-[x] FastAPI 앱 구조 (main.py + 4 라우터)
-[x] POST /predict — 이미지 → 음식명 + 알레르기 분석
-[x] GET /barcode/{code} — Open Food Facts 연동
-[x] GET /restaurants — 위치 기반 식당 검색 (OA-16094)
-[x] GET /hotspots — 외국인 밀집 지역 경보 (OA-14993)
-[x] claude_client.py — 10개 언어 지원
-[x] cache.py — SQLite 캐시 (중복 쿼리 $0)
-[x] data.py — CSV 로더 + Haversine 거리 계산
-[x] model.py — ONNX 추론 (softmax 직접 분류, FAISS 제거)
+[x] FastAPI 앱 (main.py + 5 라우터)
+[x] POST /predict — 이미지 → ViT 추론 → 음식명 + 알레르기
+[x] GET /barcode/{code} — 3단 fallback (Open Food Facts → 식품안전나라 → Claude)
+[x] GET /restaurants — 서울 12만 식당, TM→WGS84 좌표 변환, 영업중 필터
+[x] GET /hotspots — 424개 행정동 외국인 밀집도, 상대 threshold
+[x] claude_client.py — 10개 언어, cache.py — SQLite
+[x] data.py — cp949 자동 감지, Haversine, pyproj 좌표 변환
+[x] 서버 시작 시 CSV 미리 로드 (첫 요청 지연 방지)
 
 === 프론트엔드 — 완료 ===
-[x] Vite + React + TypeScript + Tailwind 초기화
-[x] PWA manifest + service worker (vite-plugin-pwa)
-[x] Layout (헤더 + 하단 네비게이션 바: Scan / Barcode / Map)
-[x] HomePage — 카메라 촬영/이미지 업로드 + 알레르기 13종 선택 + 분석 버튼
-[x] ResultPage — 음식명, 알레르기 경고, Top-3 예측, 재료, Claude 분석
-[x] BarcodePage — 바코드 번호 입력 → Open Food Facts 조회
-[x] MapPage — 주변 식당 리스트 + 외국인 밀집 핫스팟 (탭 전환)
-[x] api.ts — 백엔드 4개 API 호출 클라이언트
+[x] Vite + React + TypeScript + Tailwind + PWA
+[x] 언어 선택 스플래시 (10개 언어)
+[x] 10개 언어 전체 UI 다국어 (i18n.ts + LangContext)
+[x] 헤더 국기 버튼 → 언어 변경 모달
+[x] HomePage — 카메라/업로드 + 알레르기 13종 선택 (번역된 이름)
+[x] ResultPage — 음식명, 알레르기 경고, Top-3, Claude 분석
+[x] BarcodePage — 카메라 스캔 (@zxing/browser) + 수동 입력 + 성공 애니메이션
+[x] MapPage — Leaflet 지도 + 식당 마커/팝업 + "Search this area" + "Go to Seoul"
+[x] TranslatePage — TTS/STT 양방향 통역 (프리셋 6개 + 직접 입력 + 직원 답변 STT)
+[x] 네비게이션 4탭: Scan / Barcode / Translate / Map
 ```
 
 ### 남은 작업 (우선순위순)
 
 ```
-=== 즉시 (이번 주) ===
-[ ] Google Drive에서 ONNX 모델 다운로드 → backend/models/ 배치
-    - model_fp32.onnx → backend/models/model_fp32.onnx
-    - faiss_labels.json → backend/models/labels.json (이름 변경)
-[ ] D드라이브 CSV → backend/data/ 연결 (복사 or 환경변수 경로 설정)
-    - 서울시 일반음식점 인허가 정보.csv → seoul_restaurants.csv
-    - 행정동 단위 서울 생활인구.csv → seoul_foreign_population.csv
-[ ] 백엔드 서버 통합 테스트 (uvicorn 실행 + 실제 이미지 /predict 호출)
-
-=== W2 (04/01~04/07) ===
-[ ] 프론트 ↔ 백엔드 연동 테스트 (npm run dev + uvicorn 동시 실행)
-[ ] ANTHROPIC_API_KEY 환경변수 설정 + Claude 분석 실 테스트
-[ ] 프론트엔드 한국어 i18n 적용 (react-i18next)
-[ ] 바코드 카메라 스캔 연동 (@zxing/browser)
-
-=== W3~W4 (04/08~04/21) — 이미 학습 완료, 품질 개선 ===
-[ ] 모델 정확도 검증 (Val Acc 확인, 75% 미달 시 튜닝)
-[ ] 프론트엔드 UX 개선 (로딩 애니메이션, 에러 처리 강화)
-[ ] 다국어 TTS/STT 양방향 통역 기능 구현 (Web Speech API + DeepL)
-
-=== W5~W6 (04/22~05/05) — 배포 ===
-[ ] HF Spaces 배포 (Dockerfile 작성 + 환경변수 설정)
-[ ] Vercel 프론트엔드 배포 + 커스텀 도메인
+=== 배포 (최우선) ===
+[ ] HF Spaces 백엔드 배포 (Dockerfile + 모델 업로드 + 환경변수)
+[ ] Vercel 프론트엔드 배포 (API URL 연결)
 [ ] Vercel Cron warm-up 설정 확인
-[ ] 엔드투엔드 테스트 (모바일 브라우저에서 전체 기능)
 
-=== W7~W8 (05/06~05/13) — 최종 점검 ===
+=== Claude API ===
+[ ] ANTHROPIC_API_KEY 환경변수 설정 (HF Spaces Secrets)
+[ ] 음식 분석 + 바코드 알레르기 추론 실 테스트
+
+=== 최종 점검 ===
+[ ] 엔드투엔드 테스트 (모바일 브라우저에서 전체 기능)
+[ ] UX 개선 (로딩, 에러 처리, 반응속도)
 [ ] 경진대회 제출 서류 준비 (서비스 설명서, 스크린샷)
-[ ] 최종 버그 수정 + 성능 최적화
 [ ] 경진대회 누리집 제출 (마감: 05/13 18:00)
 ```
 
@@ -487,8 +466,10 @@ def build_tts_question(food_name: str, user_allergy: str, language: str) -> str:
 | 산출물 | 위치 | 비고 |
 |---|---|---|
 | 전처리된 이미지 (150클래스) | `D:/noallergyforeveryone/data/processed/` | 134,476장 |
-| 전처리 통계 | `D:/noallergyforeveryone/data/processed/stats.json` | 클래스별 blur/dup 통계 |
-| 열린데이터광장 CSV 원본 | `D:/noallergyforeveryone/` | 한글 파일명 그대로 |
-| ONNX 모델 + FAISS | `Google Drive: allergydata/models/` | 로컬 배치 필요 |
-| label_ingredient_map.json | `backend/data/label_ingredient_map.json` | 229개 음식 |
-| 프론트엔드 빌드 | `frontend/dist/` (180KB JS + 13KB CSS) | Vite 빌드 OK |
+| ONNX 모델 | `backend/models/model_fp32.onnx` + `.data` | 335MB, 로컬 배치 완료 |
+| 라벨 | `backend/models/labels.json` | 150클래스 |
+| 식재료 매핑 | `backend/data/label_ingredient_map.json` | 229개 음식 |
+| 행정동 매핑 | `backend/data/dong_names.json` | 432개 |
+| 서울 음식점 CSV | `backend/data/seoul_restaurants.csv` | 211MB, 12만개 영업중 |
+| 외국인 생활인구 CSV | `backend/data/seoul_foreign_population.csv` | 14MB, 424개 행정동 |
+| 프론트엔드 빌드 | `frontend/dist/` | ~200KB JS + 16KB CSS |
