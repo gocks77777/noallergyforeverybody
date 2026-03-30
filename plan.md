@@ -338,32 +338,31 @@ data/
 ## 9. 추가 기능: 다국어 TTS + STT 양방향 통역 (W7 구현)
 
 ### 개요
-외국인 사용자가 언어를 선택하면 사이트 전체가 해당 언어로 전환되고, 음식 스캔 후 알레르기 관련 질문을 TTS로 재생 + 상대방(식당 직원 등)의 음성 답변을 STT로 받아 한국어로 번역해주는 양방향 통역 기능.
+외국인 사용자가 자기 언어로 알레르기 질문을 선택하면, 앱이 한국어 TTS로 식당 직원에게 재생. 직원이 한국어로 음성 답변하면 STT로 인식 후 외국인의 언어로 번역해주는 양방향 통역 기능.
 
 ### 흐름
 ```
-[나 (한국어)] 알레르기 질문 선택 or 직접 말하기
-  → Web Speech API (STT): 한국어 음성 → 텍스트
-  → DeepL API: 한국어 → 상대방 언어로 번역
-  → Web Speech API (TTS): 번역된 문장 음성 재생
+[외국인] 자기 언어(예: 영어)로 질문 선택 or 직접 입력
+  → DeepL API: 외국인 언어 → 한국어로 번역
+  → Web Speech API (TTS): 한국어 음성으로 재생 (식당 직원에게 들려줌)
         ↓
-[상대방] 자기 언어로 음성 답변
-  → Web Speech API (STT): 상대방 언어 음성 → 텍스트
-  → DeepL API: 상대방 언어 → 한국어로 번역
-  → 화면에 한국어 번역 결과 표시
+[한국인 직원] 한국어로 음성 답변
+  → Web Speech API (STT): 한국어 음성 → 텍스트
+  → DeepL API: 한국어 → 외국인 언어로 번역
+  → 화면에 외국인 언어로 번역 결과 표시 + TTS 재생
 ```
 
 ### 예시
-- 내가 말함: "이 음식에 땅콩 들어있나요?"
-- 앱이 영어로 TTS 재생: *"Does this dish contain peanuts?"*
-- 직원이 영어로 대답: *"No, but it contains sesame."*
-- 앱이 한국어로 표시: "아니요, 하지만 참깨가 들어있습니다."
+- 외국인이 영어로 선택: *"Does this dish contain peanuts?"*
+- 앱이 한국어 TTS 재생: "이 음식에 땅콩 들어있나요?"
+- 직원이 한국어로 대답: "아니요, 하지만 참깨가 들어있어요."
+- 앱이 영어로 표시 + TTS: *"No, but it contains sesame."*
 
-### 자주 쓰는 질문 프리셋 (버튼 제공)
-- "이 음식에 ○○ 들어있나요?"
-- "알레르기가 있어요"
-- "이거 빼고 만들어주세요"
-- "이 음식 성분표를 보여주세요"
+### 자주 쓰는 질문 프리셋 (외국인 언어로 버튼 제공)
+- "Does this contain ○○?" / "この料理に○○は入っていますか？"
+- "I have an allergy" / "アレルギーがあります"
+- "Please make it without this ingredient"
+- "Can I see the ingredient list?"
 
 ### 구현 스펙
 
@@ -383,8 +382,9 @@ data/
 def build_tts_question(food_name: str, user_allergy: str, language: str) -> str:
     return f"""
 음식: {food_name}, 사용자 알레르기: {user_allergy}
-위 정보를 바탕으로 식당에서 물어볼 수 있는 짧은 질문 1문장을 {language}로 만들어주세요.
-예: "Does this contain {user_allergy}?"
+위 정보를 바탕으로 식당 직원에게 물어볼 짧은 한국어 질문 1문장을 만들어주세요.
+그리고 같은 문장을 {language}로도 번역해주세요.
+예: 한국어: "이 음식에 땅콩 들어있나요?" / English: "Does this contain peanuts?"
 """
 ```
 
