@@ -1,10 +1,11 @@
 """
-app/core/model.py — ONNX 모델 싱글턴 로더 (softmax 분류)
+app/core/model.py -ONNX 모델 싱글턴 로더 (softmax 분류)
 W4에서 생성된 model_fp32.onnx, labels.json, label_ingredient_map.json 사용
 """
 import io
 import json
 import os
+import unicodedata
 
 import numpy as np
 from PIL import Image
@@ -45,19 +46,19 @@ class AllergyModel:
         )
 
         with open(LABELS_PATH, encoding="utf-8") as f:
-            self._labels = json.load(f)          # ["김치찌개", "불고기", ...]
+            self._labels = [unicodedata.normalize("NFC", l) for l in json.load(f)]
 
         with open(MAP_PATH, encoding="utf-8") as f:
             self._ing_map = json.load(f)
 
         self._ready = True
-        print(f"[model] 로드 완료 — {len(self._labels)}개 클래스")
+        print(f"[model] 로드 완료 -{len(self._labels)}개 클래스")
 
     def _preprocess(self, img_bytes: bytes) -> np.ndarray:
         img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
         img = img.resize((IMG_SIZE, IMG_SIZE), Image.BICUBIC)
         arr = np.array(img, dtype=np.float32) / 255.0
-        arr = (arr - IMAGENET_MEAN) / IMAGENET_STD
+        arr = ((arr - IMAGENET_MEAN) / IMAGENET_STD).astype(np.float32)
         return arr.transpose(2, 0, 1)[np.newaxis]   # (1, 3, 224, 224)
 
     def predict(self, img_bytes: bytes, top_k: int = 3) -> dict:
