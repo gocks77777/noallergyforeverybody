@@ -1,8 +1,14 @@
 {
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://cleaningsource-allergy-scan-api.hf.space/:path*"
+    }
+  ],
   "crons": [
     {
       "path": "/api/warmup",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
