@@ -73,11 +73,37 @@ graph TB
 |---|---|
 | **Frontend** | React 18 + TypeScript + Vite + Tailwind CSS (PWA) |
 | **Backend** | FastAPI + ONNX Runtime + Anthropic Claude API + SQLite |
-| **ML Model** | `google/vit-base-patch16-224` fine-tuned, 150 classes, 134,476 images |
+| **ML Model** | `google/vit-base-patch16-224` fine-tuned, 150 classes, 134,476 images, **94.6% accuracy** |
 | **Public Data** | Seoul Open Data Plaza: OA-20918 (food ingredients), OA-16094 (restaurants), OA-14993 (foreign population) |
 | **External APIs** | Open Food Facts (2.7M+ products), Korea Food Safety API |
 | **Infra** | Vercel (frontend) + HuggingFace Spaces Docker (backend) |
 | **Total Cost** | **~$4** for the entire competition period |
+
+---
+
+## Model Performance
+
+Trained on **134,476 images** across **150 Korean food classes** using Google Colab free T4 GPU.
+
+| Metric | Value |
+|---|---|
+| **Best Validation Accuracy** | **94.62%** |
+| Best Checkpoint | Epoch 10, Step 18,920 |
+| Training Time | ~30 min (10 epochs, FP16, batch 64) |
+| Model Size | 335 MB (ONNX FP32) |
+| Inference Latency | ~1.0s (CPU) |
+
+**Accuracy by Epoch:**
+```
+Epoch  1 ████████░░░░░░░░░░░░  72.6%
+Epoch  2 ████████████░░░░░░░░  81.2%
+Epoch  3 █████████████░░░░░░░  83.6%
+Epoch  4 █████████████░░░░░░░  85.2%
+Epoch  5 █████████████░░░░░░░  85.7%
+Epoch  6 █████████████░░░░░░░  86.4%
+Epoch  7 █████████████░░░░░░░  86.7%
+Epoch 10 ███████████████████░  94.6%  ← Best
+```
 
 ---
 
