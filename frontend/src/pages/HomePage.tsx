@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { predictImage } from '@/lib/api'
 import { useLang } from '@/lib/LangContext'
+import { motion } from 'framer-motion'
 
 const ALLERGY_KEYS = [
   '계란', '우유', '밀', '대두', '땅콩', '견과류',
@@ -50,22 +51,34 @@ export default function HomePage() {
   }
 
   return (
-    <div className="p-4 space-y-5">
+    <div className="p-4 space-y-5 pb-6">
       {/* Image Upload Area */}
-      <section
-        className="relative border-2 border-dashed border-gray-300 rounded-2xl overflow-hidden bg-white flex items-center justify-center aspect-[4/3] cursor-pointer hover:border-primary-400 transition-colors"
+      <motion.section
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        className="relative border-2 border-dashed border-gray-200 rounded-3xl overflow-hidden bg-white flex items-center justify-center aspect-[4/3] cursor-pointer hover:border-primary-400 transition-all duration-300 shadow-soft group"
         onClick={() => fileRef.current?.click()}
       >
         {preview ? (
-          <img src={preview} alt="food" className="w-full h-full object-cover" />
+          <motion.img
+            src={preview}
+            alt="food"
+            className="w-full h-full object-cover"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          />
         ) : (
-          <div className="text-center text-gray-400 space-y-2 p-6">
-            <svg className="w-14 h-14 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <circle cx="12" cy="13" r="3" />
-            </svg>
-            <p className="text-sm font-medium">{t('home.upload')}</p>
-            <p className="text-xs">{t('home.supported')}</p>
+          <div className="text-center text-gray-400 space-y-3 p-6">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-gray-50 flex items-center justify-center group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors duration-300">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <circle cx="12" cy="13" r="3" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-gray-500">{t('home.upload')}</p>
+            <p className="text-xs text-gray-300">{t('home.supported')}</p>
           </div>
         )}
         <input
@@ -76,36 +89,54 @@ export default function HomePage() {
           className="hidden"
           onChange={(e) => handleFile(e.target.files?.[0])}
         />
-      </section>
+      </motion.section>
 
       {/* Allergy Selection */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-gray-700">{t('home.allergies')}</h2>
+      <motion.section
+        className="space-y-3"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('home.allergies')}</h2>
         <div className="flex flex-wrap gap-2">
           {ALLERGY_KEYS.map((a) => (
             <button
               key={a}
               onClick={() => toggleAllergy(a)}
-              className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+              className={`btn-press px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                 allergies.has(a)
-                  ? 'bg-danger-500 text-white border-danger-500'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-primary-400'
+                  ? 'bg-danger-500 text-white shadow-sm'
+                  : 'bg-white text-gray-500 border border-gray-200 hover:border-primary-300 hover:text-primary-600 shadow-soft'
               }`}
             >
               {t(`allergen.${a}`)}
             </button>
           ))}
         </div>
-      </section>
+      </motion.section>
 
       {error && (
-        <p className="text-sm text-danger-600 bg-danger-50 rounded-lg px-3 py-2">{error}</p>
+        <motion.p
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-sm text-danger-600 bg-danger-50 rounded-2xl px-4 py-3 border border-danger-100"
+        >
+          {error}
+        </motion.p>
       )}
 
-      <button
+      <motion.button
         onClick={handleAnalyze}
         disabled={!file || loading}
-        className="w-full py-3.5 rounded-xl font-semibold text-white bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className={`btn-press w-full py-4 rounded-2xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-2 ${
+          file && !loading
+            ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-elevated hover:shadow-glow'
+            : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+        }`}
       >
         {loading ? (
           <>
@@ -118,7 +149,7 @@ export default function HomePage() {
         ) : (
           t('home.analyze')
         )}
-      </button>
+      </motion.button>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { PredictResult } from '@/lib/api'
 import { useLang } from '@/lib/LangContext'
+import { motion } from 'framer-motion'
 
 export default function ResultPage() {
   const navigate = useNavigate()
@@ -9,9 +10,14 @@ export default function ResultPage() {
 
   if (!state?.result) {
     return (
-      <div className="p-6 text-center space-y-4">
-        <p className="text-gray-500">{t('result.no_result')}</p>
-        <button onClick={() => navigate('/')} className="text-primary-600 font-medium">
+      <div className="p-6 text-center space-y-4 pt-20">
+        <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+          <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <p className="text-gray-400">{t('result.no_result')}</p>
+        <button onClick={() => navigate('/')} className="text-primary-600 font-semibold btn-press">
           {t('result.go_back')}
         </button>
       </div>
@@ -22,91 +28,137 @@ export default function ResultPage() {
   const hasDanger = result.allergens.length > 0
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 pb-6">
       {/* Food Image + Name */}
-      <div className="relative rounded-2xl overflow-hidden bg-white shadow">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative rounded-3xl overflow-hidden bg-white shadow-card"
+      >
         {preview && <img src={preview} alt={result.food_name} className="w-full aspect-video object-cover" />}
-        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-          <h2 className="text-xl font-bold text-white">{result.food_name}</h2>
-          <p className="text-sm text-white/80">
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-5 pt-16">
+          <h2 className="text-2xl font-extrabold text-white tracking-tight">{result.food_name}</h2>
+          <p className="text-sm text-white/70 mt-0.5">
             {result.top3[0]?.score && `${t('result.confidence')}: ${(result.top3[0].score * 100).toFixed(1)}%`}
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Allergy Alert */}
-      {hasDanger ? (
-        <div className="bg-danger-50 border border-danger-200 rounded-xl p-4 space-y-2">
-          <div className="flex items-center gap-2">
-            <svg className="w-6 h-6 text-danger-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <h3 className="text-danger-700 font-bold">{t('result.warning')}</h3>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.1 }}
+      >
+        {hasDanger ? (
+          <div className="bg-gradient-to-r from-danger-50 to-danger-50/50 border border-danger-200 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-danger-100 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-danger-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-danger-700 font-bold">{t('result.warning')}</h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {result.allergens.map((a) => (
+                <span key={a} className="px-3 py-1.5 bg-danger-500 text-white text-sm rounded-xl font-semibold shadow-sm">
+                  {a}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {result.allergens.map((a) => (
-              <span key={a} className="px-2.5 py-1 bg-danger-500 text-white text-sm rounded-full font-medium">
-                {a}
-              </span>
-            ))}
+        ) : (
+          <div className="bg-gradient-to-r from-primary-50 to-primary-50/50 border border-primary-200 rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-8 h-8 bg-primary-100 rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-primary-700 font-semibold">{t('result.safe')}</p>
           </div>
-        </div>
-      ) : (
-        <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-center gap-2">
-          <svg className="w-6 h-6 text-primary-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-primary-700 font-medium">{t('result.safe')}</p>
-        </div>
-      )}
+        )}
+      </motion.div>
 
       {/* Ingredients */}
-      <section className="bg-white rounded-xl shadow p-4 space-y-2">
-        <h3 className="text-sm font-semibold text-gray-700">{t('result.ingredients')}</h3>
-        <div className="flex flex-wrap gap-1.5">
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="bg-white rounded-2xl shadow-card p-4 space-y-3"
+      >
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('result.ingredients')}</h3>
+        <div className="flex flex-wrap gap-2">
           {result.ingredients.map((ing) => (
-            <span key={ing} className={`px-2 py-0.5 text-sm rounded-md ${
-              result.allergens.some((a) => ing.includes(a)) ? 'bg-danger-100 text-danger-700' : 'bg-gray-100 text-gray-600'
+            <span key={ing} className={`px-2.5 py-1 text-sm rounded-lg font-medium ${
+              result.allergens.some((a) => ing.includes(a)) ? 'bg-danger-100 text-danger-700' : 'bg-gray-50 text-gray-600'
             }`}>
               {ing}
             </span>
           ))}
         </div>
-      </section>
+      </motion.section>
 
       {/* Top 3 */}
-      <section className="bg-white rounded-xl shadow p-4 space-y-2">
-        <h3 className="text-sm font-semibold text-gray-700">{t('result.top3')}</h3>
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white rounded-2xl shadow-card p-4 space-y-3"
+      >
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('result.top3')}</h3>
         {result.top3.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
-            <span className="text-xs text-gray-400 w-4">{i + 1}</span>
+            <span className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-md ${
+              i === 0 ? 'bg-primary-100 text-primary-700' : 'bg-gray-50 text-gray-400'
+            }`}>{i + 1}</span>
             <div className="flex-1">
               <div className="flex justify-between text-sm">
-                <span className={i === 0 ? 'font-semibold text-primary-700' : 'text-gray-600'}>{item.label}</span>
-                <span className="text-gray-400">{(item.score * 100).toFixed(1)}%</span>
+                <span className={i === 0 ? 'font-bold text-gray-800' : 'text-gray-500'}>{item.label}</span>
+                <span className="text-gray-400 text-xs">{(item.score * 100).toFixed(1)}%</span>
               </div>
-              <div className="mt-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div className={`h-full rounded-full ${i === 0 ? 'bg-primary-500' : 'bg-gray-300'}`} style={{ width: `${item.score * 100}%` }} />
+              <div className="mt-1.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <motion.div
+                  className={`h-full rounded-full ${i === 0 ? 'bg-gradient-to-r from-primary-500 to-primary-400' : 'bg-gray-300'}`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${item.score * 100}%` }}
+                  transition={{ duration: 0.6, delay: 0.3 + i * 0.1, ease: 'easeOut' }}
+                />
               </div>
             </div>
           </div>
         ))}
-      </section>
+      </motion.section>
 
       {/* Claude Analysis */}
       {result.claude_analysis && (
-        <section className="bg-white rounded-xl shadow p-4 space-y-2">
-          <h3 className="text-sm font-semibold text-gray-700">{t('result.ai_analysis')}</h3>
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="bg-white rounded-2xl shadow-card p-4 space-y-2"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 bg-gradient-to-br from-primary-500 to-primary-600 rounded-md flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('result.ai_analysis')}</h3>
+          </div>
           <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{result.claude_analysis}</p>
-        </section>
+        </motion.section>
       )}
 
-      <button
+      <motion.button
         onClick={() => navigate('/')}
-        className="w-full py-3 rounded-xl font-semibold text-primary-600 border-2 border-primary-600 hover:bg-primary-50 transition-colors"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="btn-press w-full py-3.5 rounded-2xl font-bold text-primary-600 border-2 border-primary-200 hover:bg-primary-50 transition-all"
       >
         {t('result.scan_another')}
-      </button>
+      </motion.button>
     </div>
   )
 }
