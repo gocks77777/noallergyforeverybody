@@ -5,6 +5,11 @@ import { getSmartRestaurants, getHotspots, type Restaurant, type Hotspot } from 
 import { useLang } from '@/lib/LangContext'
 import { motion } from 'framer-motion'
 
+const ALLERGY_KEYS = [
+  '계란', '우유', '밀', '대두', '땅콩', '견과류',
+  '생선', '갑각류', '조개류', '쇠고기', '돼지고기', '닭고기', '토마토',
+]
+
 // Leaflet icon fix
 delete (L.Icon.Default.prototype as any)._getIconUrl
 
@@ -130,7 +135,7 @@ export default function MapPage() {
   const [radius, setRadius] = useState(500)
   const [showSearchHere, setShowSearchHere] = useState(false)
   const [mapInited, setMapInited] = useState(false)
-  const [userAllergies] = useState<string[]>(getUserAllergies)
+  const [userAllergies, setUserAllergies] = useState<string[]>(getUserAllergies)
   const [source, setSource] = useState<'seoul' | 'global'>('seoul')
 
   const mapRef = useRef<L.Map | null>(null)
@@ -296,33 +301,36 @@ export default function MapPage() {
         ))}
       </div>
 
-      {/* Allergy info banner */}
-      {tab === 'restaurants' && userAllergies.length > 0 && (
+      {/* Allergy selector on map tab */}
+      {tab === 'restaurants' && (
         <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-soft p-3 flex items-start gap-2"
+          className="bg-white rounded-2xl shadow-soft p-3 space-y-2"
         >
-          <div className="w-6 h-6 bg-primary-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-            <svg className="w-3.5 h-3.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <p className="text-xs text-gray-500">{t('home.allergies')}:</p>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {userAllergies.map(a => (
-                <span key={a} className="text-[10px] bg-danger-100 text-danger-700 px-1.5 py-0.5 rounded-md font-medium">{a}</span>
-              ))}
-            </div>
+          <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">{t('home.allergies')}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {ALLERGY_KEYS.map(a => (
+              <button
+                key={a}
+                onClick={() => {
+                  setUserAllergies(prev => {
+                    const next = prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]
+                    try { localStorage.setItem('user-allergies', JSON.stringify(next)) } catch {}
+                    return next
+                  })
+                }}
+                className={`btn-press text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all ${
+                  userAllergies.includes(a)
+                    ? 'bg-danger-500 text-white shadow-sm'
+                    : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                }`}
+              >
+                {t(`allergen.${a}`)}
+              </button>
+            ))}
           </div>
         </motion.div>
-      )}
-
-      {tab === 'restaurants' && userAllergies.length === 0 && (
-        <div className="bg-warning-50 border border-warning-100 rounded-2xl px-3 py-2.5 text-xs text-warning-600">
-          {t('home.allergies')} — {t('nav.scan')} {t('home.allergies')}
-        </div>
       )}
 
       {error && (
