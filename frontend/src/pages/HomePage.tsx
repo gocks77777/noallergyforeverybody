@@ -36,6 +36,14 @@ export default function HomePage() {
     })
   }
 
+  // 알레르기 선택 변경 시 localStorage에 저장
+  function toggleAllergySave(a: string) {
+    toggleAllergy(a)
+    const next = new Set(allergies)
+    next.has(a) ? next.delete(a) : next.add(a)
+    try { localStorage.setItem('user-allergies', JSON.stringify([...next])) } catch {}
+  }
+
   async function handleAnalyze() {
     if (!file) return
     setLoading(true)
@@ -103,7 +111,7 @@ export default function HomePage() {
           {ALLERGY_KEYS.map((a) => (
             <button
               key={a}
-              onClick={() => toggleAllergy(a)}
+              onClick={() => toggleAllergySave(a)}
               className={`btn-press px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                 allergies.has(a)
                   ? 'bg-danger-500 text-white shadow-sm'
