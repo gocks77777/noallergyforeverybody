@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { getRestaurants, getHotspots, type Restaurant, type Hotspot } from '@/lib/api'
+import { getSmartRestaurants, getHotspots, type Restaurant, type Hotspot } from '@/lib/api'
 import { useLang } from '@/lib/LangContext'
 import { motion } from 'framer-motion'
 
 // Leaflet icon fix
 delete (L.Icon.Default.prototype as any)._getIconUrl
 
-// 식당 카테고리 → 주의 알레르겐 매핑
+// 식당 카테고리 → 주의 알레르겐 매핑 (한국 카테고리 + 글로벌 cuisine 태그)
 const CATEGORY_ALLERGENS: Record<string, string[]> = {
+  // 한국 (서울 CSV)
   '일식':     ['생선', '갑각류', '조개류', '대두'],
   '횟집':     ['생선', '갑각류', '조개류'],
   '중국식':   ['대두', '밀', '계란', '땅콩'],
@@ -26,14 +27,60 @@ const CATEGORY_ALLERGENS: Record<string, string[]> = {
   '외국음식전문점(인도,태국등)': ['땅콩', '갑각류', '대두', '생선'],
   '김밥(도시락)':   ['밀', '대두', '계란'],
   '뷔페식':         ['밀', '대두', '계란', '생선', '갑각류'],
+  // 글로벌 (OSM cuisine 태그)
+  'japanese':  ['생선', '갑각류', '조개류', '대두'],
+  'sushi':     ['생선', '갑각류', '대두'],
+  'ramen':     ['밀', '대두', '계란'],
+  'chinese':   ['대두', '밀', '계란', '땅콩'],
+  'korean':    ['대두', '밀', '생선'],
+  'thai':      ['땅콩', '갑각류', '생선'],
+  'vietnamese':['생선', '갑각류', '땅콩'],
+  'pho':       ['생선', '쇠고기'],
+  'indian':    ['우유', '견과류', '밀'],
+  'curry':     ['우유', '견과류', '밀'],
+  'italian':   ['밀', '우유', '계란'],
+  'pizza':     ['밀', '우유'],
+  'pasta':     ['밀', '계란', '우유'],
+  'mexican':   ['우유', '밀'],
+  'burger':    ['밀', '우유', '계란', '쇠고기'],
+  'sandwich':  ['밀', '우유', '계란'],
+  'seafood':   ['생선', '갑각류', '조개류'],
+  'fish_and_chips': ['생선', '밀'],
+  'steak':     ['쇠고기'],
+  'kebab':     ['밀', '우유'],
+  'french':    ['밀', '우유', '계란'],
+  'spanish':   ['생선', '갑각류', '조개류'],
+  'turkish':   ['밀', '우유', '견과류'],
+  'middle_eastern': ['밀', '견과류', '대두'],
+  'arab':      ['밀', '견과류'],
+  'african':   ['땅콩', '생선'],
+  'brazilian':  ['쇠고기', '대두'],
+  'fast_food': ['밀', '우유', '계란', '대두'],
+  'cafe':      ['밀', '우유', '계란'],
+  'coffee':    ['우유'],
+  'bakery':    ['밀', '우유', '계란', '견과류'],
+  'ice_cream': ['우유', '계란', '견과류'],
+  'noodle':    ['밀', '계란', '대두'],
 }
 
 type RiskLevel = 'danger' | 'warning' | 'safe' | 'unknown'
 
+function getAllergens(category: string): string[] {
+  // 직접 매치
+  if (CATEGORY_ALLERGENS[category]) return CATEGORY_ALLERGENS[category]
+  // 세미콜론 분리 (OSM: "italian;pizza")
+  const parts = category.split(/[;,]/).map(s => s.trim().toLowerCase())
+  const all = new Set<string>()
+  for (const p of parts) {
+    for (const a of CATEGORY_ALLERGENS[p] ?? []) all.add(a)
+  }
+  return [...all]
+}
+
 function getRisk(category: string, userAllergies: string[]): RiskLevel {
   if (userAllergies.length === 0) return 'unknown'
-  const catAllergens = CATEGORY_ALLERGENS[category]
-  if (!catAllergens) return 'unknown'
+  const catAllergens = getAllergens(category)
+  if (catAllergens.length === 0) return 'unknown'
   const overlap = catAllergens.filter(a => userAllergies.includes(a))
   if (overlap.length >= 2) return 'danger'
   if (overlap.length === 1) return 'warning'
@@ -41,8 +88,7 @@ function getRisk(category: string, userAllergies: string[]): RiskLevel {
 }
 
 function getOverlap(category: string, userAllergies: string[]): string[] {
-  const catAllergens = CATEGORY_ALLERGENS[category] ?? []
-  return catAllergens.filter(a => userAllergies.includes(a))
+  return getAllergens(category).filter(a => userAllergies.includes(a))
 }
 
 const RISK_COLORS = {
@@ -85,6 +131,7 @@ export default function MapPage() {
   const [showSearchHere, setShowSearchHere] = useState(false)
   const [mapInited, setMapInited] = useState(false)
   const [userAllergies] = useState<string[]>(getUserAllergies)
+  const [source, setSource] = useState<'seoul' | 'global'>('seoul')
 
   const mapRef = useRef<L.Map | null>(null)
   const mapElRef = useRef<HTMLDivElement>(null)
@@ -125,8 +172,9 @@ export default function MapPage() {
     setError('')
     setShowSearchHere(false)
     try {
-      const data = await getRestaurants(center.lat, center.lng, radius)
+      const { restaurants: data, source: src } = await getSmartRestaurants(center.lat, center.lng, radius)
       setRestaurants(data)
+      setSource(src)
       if (data.length === 0) setError(t('map.no_data_here'))
     } catch (e: any) {
       setError(e.message)
@@ -196,8 +244,9 @@ export default function MapPage() {
         map.flyTo([lat, lng], 15, { duration: 1 })
 
         try {
-          const data = await getRestaurants(lat, lng, radius)
+          const { restaurants: data, source: src } = await getSmartRestaurants(lat, lng, radius)
           setRestaurants(data)
+          setSource(src)
           if (data.length === 0) setError(t('map.no_nearby'))
         } catch (e: any) {
           setError(e.message)
@@ -338,8 +387,13 @@ export default function MapPage() {
               </div>
             )}
 
-            <div className="absolute bottom-3 right-3 z-[1000] glass shadow-sm px-3 py-1 rounded-full text-xs text-gray-600 font-medium">
-              {loading ? t('map.searching') : `${restaurants.length}${t('map.restaurant_count')}`}
+            <div className="absolute bottom-3 right-3 z-[1000] glass shadow-sm px-3 py-1.5 rounded-xl text-[10px] text-gray-500 font-medium flex items-center gap-1.5">
+              <span>{loading ? t('map.searching') : `${restaurants.length}${t('map.restaurant_count')}`}</span>
+              {!loading && restaurants.length > 0 && (
+                <span className={`px-1.5 py-0.5 rounded-md text-white font-bold ${source === 'seoul' ? 'bg-primary-500' : 'bg-blue-500'}`}>
+                  {source === 'seoul' ? 'Seoul Data' : 'OSM Global'}
+                </span>
+              )}
             </div>
           </div>
 
