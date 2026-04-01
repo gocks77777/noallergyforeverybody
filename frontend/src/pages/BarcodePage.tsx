@@ -90,8 +90,8 @@ export default function BarcodePage() {
   return (
     <div className="p-4 space-y-5">
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-gray-800">{t('barcode.title')}</h2>
-        <p className="text-sm text-gray-500">{t('barcode.desc')}</p>
+        <h2 className="text-xl font-bold text-gray-800">{t('barcode.title')}</h2>
+        <p className="text-base text-gray-500">{t('barcode.desc')}</p>
 
         {/* Camera Scanner */}
         {scanning ? (
@@ -104,7 +104,7 @@ export default function BarcodePage() {
                 <div className="w-64 h-40 border-2 border-white/70 rounded-xl relative overflow-hidden">
                   <div className="absolute left-0 right-0 h-0.5 bg-primary-400 animate-[scan_2s_ease-in-out_infinite]" />
                 </div>
-                <p className="mt-3 text-white text-sm bg-black/50 px-4 py-1.5 rounded-full animate-pulse">
+                <p className="mt-3 text-white text-base bg-black/50 px-4 py-1.5 rounded-full animate-pulse">
                   {t('scan.scanning')}
                 </p>
               </div>
@@ -117,16 +117,16 @@ export default function BarcodePage() {
                   </svg>
                 </div>
                 <div className="mt-3 bg-primary-500 text-white px-5 py-2 rounded-full text-center">
-                  <p className="font-bold text-sm">{t('scan.success')}</p>
-                  <p className="text-xs text-primary-100">{foundCode}</p>
+                  <p className="font-bold text-base">{t('scan.success')}</p>
+                  <p className="text-sm text-primary-100">{foundCode}</p>
                 </div>
-                <p className="mt-2 text-white/70 text-xs animate-pulse">{t('scan.loading')}</p>
+                <p className="mt-2 text-white/70 text-sm animate-pulse">{t('scan.loading')}</p>
               </div>
             )}
 
             <button
               onClick={stopScan}
-              className="absolute top-3 right-3 bg-black/60 text-white px-4 py-2 rounded-xl text-sm font-medium"
+              className="absolute top-3 right-3 bg-black/60 text-white px-4 py-2 rounded-xl text-base font-medium"
             >
               {t('scan.cancel')}
             </button>
@@ -136,11 +136,11 @@ export default function BarcodePage() {
             onClick={startScan}
             className="w-full py-4 border-2 border-dashed border-gray-300 rounded-2xl bg-white hover:border-primary-400 transition-colors flex flex-col items-center gap-2 text-gray-400"
           >
-            <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span className="text-sm font-medium">{t('scan.tap')}</span>
+            <span className="text-base font-medium">{t('scan.tap')}</span>
           </button>
         )}
 
@@ -153,7 +153,7 @@ export default function BarcodePage() {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && doSearch(code)}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
           <button
             onClick={() => doSearch(code)}
@@ -165,32 +165,32 @@ export default function BarcodePage() {
         </div>
       </section>
 
-      {error && <p className="text-sm text-danger-600 bg-danger-50 rounded-lg px-3 py-2">{error}</p>}
+      {error && <p className="text-base text-danger-600 bg-danger-50 rounded-lg px-3 py-2">{error}</p>}
 
       {result && (
         <section className="bg-white rounded-xl shadow p-4 space-y-4">
-          <h3 className="font-bold text-gray-800">{result.product_name || t('barcode.title')}</h3>
-          <p className="text-xs text-gray-400">Barcode: {result.barcode}</p>
+          <h3 className="font-bold text-gray-800 text-lg">{result.product_name || t('barcode.title')}</h3>
+          <p className="text-sm text-gray-400">Barcode: {result.barcode}</p>
 
           {result.allergens.length > 0 ? (
             <div className="bg-danger-50 border border-danger-200 rounded-lg p-3 space-y-2">
-              <p className="text-sm font-semibold text-danger-700">{t('barcode.allergens_found')}</p>
+              <p className="text-base font-semibold text-danger-700">{t('barcode.allergens_found')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {result.allergens.map((a) => (
-                  <span key={a} className="px-2.5 py-1 bg-danger-500 text-white text-sm rounded-full">{a}</span>
+                  <span key={a} className="px-3 py-1.5 bg-danger-500 text-white text-base rounded-full">{a}</span>
                 ))}
               </div>
             </div>
           ) : (
             <div className="bg-primary-50 border border-primary-200 rounded-lg p-3">
-              <p className="text-sm text-primary-700 font-medium">{t('barcode.no_allergens')}</p>
+              <p className="text-base text-primary-700 font-medium">{t('barcode.no_allergens')}</p>
             </div>
           )}
 
           {result.ingredients_text && (
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-gray-700">{t('barcode.ingredients')}</p>
-              <p className="text-sm text-gray-500 leading-relaxed">{result.ingredients_text}</p>
+              <p className="text-base font-semibold text-gray-700">{t('barcode.ingredients')}</p>
+              <p className="text-base text-gray-500 leading-relaxed">{result.ingredients_text}</p>
             </div>
           )}
         </section>

@@ -41,12 +41,12 @@ export default function SplashPage({ onDone }: Props) {
           animate={{ scale: 1, rotate: 0 }}
           transition={{ duration: 0.5, delay: 0.1, type: 'spring' }}
         >
-          <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <svg className="w-14 h-14 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
         </motion.div>
         <h1 className="text-4xl font-extrabold text-white tracking-tight">Allergy Scan</h1>
-        <p className="text-white/60 mt-2 text-sm font-medium">AI Food Allergy Safety Guide</p>
+        <p className="text-white/60 mt-2 text-base font-medium">AI Food Allergy Safety Guide</p>
       </motion.div>
 
       {/* Language Grid */}
@@ -56,7 +56,7 @@ export default function SplashPage({ onDone }: Props) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <p className="text-white/50 text-center text-xs font-semibold uppercase tracking-widest mb-4">Select your language</p>
+        <p className="text-white/50 text-center text-sm font-semibold uppercase tracking-widest mb-4">Select your language</p>
         <div className="grid grid-cols-2 gap-2.5">
           {LANGUAGES.map((l, i) => (
             <motion.button
@@ -72,7 +72,7 @@ export default function SplashPage({ onDone }: Props) {
               }`}
             >
               <span className="text-2xl">{l.flag}</span>
-              <span className="text-sm font-semibold">{l.label}</span>
+              <span className="text-base font-semibold truncate">{l.label}</span>
             </motion.button>
           ))}
         </div>

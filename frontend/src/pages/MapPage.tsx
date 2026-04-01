@@ -290,7 +290,7 @@ export default function MapPage() {
           <button
             key={tb}
             onClick={() => setTab(tb)}
-            className={`btn-press flex-1 py-2.5 rounded-2xl text-sm font-semibold transition-all ${
+            className={`btn-press flex-1 py-3 rounded-2xl text-base font-semibold transition-all ${
               tab === tb
                 ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-sm'
                 : 'bg-white text-gray-500 border border-gray-200'
@@ -308,7 +308,7 @@ export default function MapPage() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl shadow-soft p-3 space-y-2"
         >
-          <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">{t('home.allergies')}</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">{t('home.allergies')}</p>
           <div className="flex flex-wrap gap-1.5">
             {ALLERGY_KEYS.map(a => (
               <button
@@ -320,7 +320,7 @@ export default function MapPage() {
                     return next
                   })
                 }}
-                className={`btn-press text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all ${
+                className={`btn-press text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
                   userAllergies.includes(a)
                     ? 'bg-danger-500 text-white shadow-sm'
                     : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
@@ -334,7 +334,7 @@ export default function MapPage() {
       )}
 
       {error && (
-        <p className="text-sm text-danger-600 bg-danger-50 rounded-2xl px-3 py-2 border border-danger-100">{error}</p>
+        <p className="text-base text-danger-600 bg-danger-50 rounded-2xl px-3 py-2 border border-danger-100">{error}</p>
       )}
 
       {/* Restaurants Tab */}
@@ -344,7 +344,7 @@ export default function MapPage() {
             <select
               value={radius}
               onChange={(e) => setRadius(Number(e.target.value))}
-              className="px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white shadow-soft"
+              className="px-3 py-2 border border-gray-200 rounded-xl text-base bg-white shadow-soft"
             >
               <option value={200}>200m</option>
               <option value={500}>500m</option>
@@ -353,7 +353,7 @@ export default function MapPage() {
             </select>
             <button
               onClick={jumpToSeoul}
-              className="btn-press ml-auto text-xs text-primary-600 font-semibold px-3 py-2 bg-primary-50 rounded-xl hover:bg-primary-100 transition-colors"
+              className="btn-press ml-auto text-sm text-primary-600 font-semibold px-3 py-2 bg-primary-50 rounded-xl hover:bg-primary-100 transition-colors"
             >
               {t('map.go_to_seoul')}
             </button>
@@ -371,7 +371,7 @@ export default function MapPage() {
               <button
                 onClick={searchAtCenter}
                 disabled={loading}
-                className="btn-press absolute top-3 left-1/2 -translate-x-1/2 z-[1000] glass shadow-elevated px-4 py-2 rounded-full text-sm font-semibold text-primary-700 border border-primary-200 hover:bg-primary-50 transition-all"
+                className="btn-press absolute top-3 left-1/2 -translate-x-1/2 z-[1000] glass shadow-elevated px-4 py-2.5 rounded-full text-base font-semibold text-primary-700 border border-primary-200 hover:bg-primary-50 transition-all"
               >
                 {loading ? t('map.searching') : t('map.search_here')}
               </button>
@@ -382,20 +382,20 @@ export default function MapPage() {
               <div className="absolute bottom-3 left-3 z-[1000] glass rounded-xl px-3 py-2 shadow-sm space-y-1">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
-                  <span className="text-[10px] text-gray-600 font-medium">{riskStats.danger}</span>
+                  <span className="text-xs text-gray-600 font-medium">{riskStats.danger}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-                  <span className="text-[10px] text-gray-600 font-medium">{riskStats.warning}</span>
+                  <span className="text-xs text-gray-600 font-medium">{riskStats.warning}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]" />
-                  <span className="text-[10px] text-gray-600 font-medium">{riskStats.safe}</span>
+                  <span className="text-xs text-gray-600 font-medium">{riskStats.safe}</span>
                 </div>
               </div>
             )}
 
-            <div className="absolute bottom-3 right-3 z-[1000] glass shadow-sm px-3 py-1.5 rounded-xl text-[10px] text-gray-500 font-medium flex items-center gap-1.5">
+            <div className="absolute bottom-3 right-3 z-[1000] glass shadow-sm px-3 py-1.5 rounded-xl text-xs text-gray-500 font-medium flex items-center gap-1.5">
               <span>{loading ? t('map.searching') : `${restaurants.length}${t('map.restaurant_count')}`}</span>
               {!loading && restaurants.length > 0 && (
                 <span className={`px-1.5 py-0.5 rounded-md text-white font-bold ${source === 'seoul' ? 'bg-primary-500' : 'bg-blue-500'}`}>
@@ -407,7 +407,7 @@ export default function MapPage() {
 
           {/* Restaurant List */}
           {restaurants.length === 0 && !loading ? (
-            <p className="text-center text-gray-400 py-4 text-sm">{t('map.no_restaurants')}</p>
+            <p className="text-center text-gray-400 py-4 text-base">{t('map.no_restaurants')}</p>
           ) : (
             <ul className="space-y-2">
               {restaurants.slice(0, 10).map((r, i) => {
@@ -436,15 +436,15 @@ export default function MapPage() {
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-gray-800">{r.name}</p>
-                        <p className="text-[11px] text-gray-400 truncate">{r.address}</p>
+                        <p className="text-base font-bold text-gray-800">{r.name}</p>
+                        <p className="text-xs text-gray-400 truncate">{r.address}</p>
                       </div>
-                      <span className="text-[10px] text-gray-400 shrink-0 ml-2 bg-gray-50 px-2 py-0.5 rounded-lg">{r.category}</span>
+                      <span className="text-xs text-gray-400 shrink-0 ml-2 bg-gray-50 px-2 py-0.5 rounded-lg">{r.category}</span>
                     </div>
                     {overlap.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
                         {overlap.map(a => (
-                          <span key={a} className="text-[10px] px-2 py-0.5 rounded-lg font-semibold"
+                          <span key={a} className="text-xs px-2.5 py-1 rounded-lg font-semibold"
                             style={{ background: `${colors.fill}15`, color: colors.fill }}
                           >
                             {a}
@@ -478,17 +478,17 @@ export default function MapPage() {
                   className="bg-white rounded-2xl shadow-soft p-4 space-y-2"
                 >
                   <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-gray-800 text-sm">{h.dong_name}</h3>
-                    <span className={`text-[10px] px-2.5 py-1 rounded-xl font-bold ${HOTSPOT_RISK_STYLE[h.risk_level]}`}>
+                    <h3 className="font-bold text-gray-800 text-base">{h.dong_name}</h3>
+                    <span className={`text-xs px-2.5 py-1 rounded-xl font-bold ${HOTSPOT_RISK_STYLE[h.risk_level]}`}>
                       {h.risk_level.toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-sm text-gray-400">
                     {t('map.foreign_pop')}: {h.foreign_count.toLocaleString()}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {h.top_allergen_foods.map((f) => (
-                      <span key={f} className="text-[10px] bg-gray-50 text-gray-600 px-2 py-1 rounded-lg font-medium">
+                      <span key={f} className="text-xs bg-gray-50 text-gray-600 px-2.5 py-1 rounded-lg font-medium">
                         {f}
                       </span>
                     ))}
