@@ -88,14 +88,15 @@ export default function BarcodePage() {
   }, [scanning])
 
   return (
-    <div className="p-4 space-y-5">
-      <section className="space-y-3">
-        <h2 className="text-xl font-bold text-gray-800">{t('barcode.title')}</h2>
-        <p className="text-base text-gray-500">{t('barcode.desc')}</p>
+    <div className="page-shell">
+      <section className="card p-4 space-y-1">
+        <h2 className="text-xl font-bold text-slate-900">{t('barcode.title')}</h2>
+        <p className="text-sm text-slate-600">{t('barcode.desc')}</p>
+      </section>
 
-        {/* Camera Scanner */}
+      <section className="space-y-3">
         {scanning ? (
-          <div className="relative rounded-2xl overflow-hidden bg-black aspect-[4/3]">
+          <div className="relative rounded-2xl overflow-hidden bg-black aspect-[4/3] border border-slate-800">
             <video ref={videoRef} className="w-full h-full object-cover" />
 
             {scanPhase === 'searching' ? (
@@ -134,7 +135,7 @@ export default function BarcodePage() {
         ) : (
           <button
             onClick={startScan}
-            className="w-full py-4 border-2 border-dashed border-gray-300 rounded-2xl bg-white hover:border-primary-400 transition-colors flex flex-col items-center gap-2 text-gray-400"
+            className="w-full py-5 border-2 border-dashed border-slate-300 rounded-2xl bg-white hover:border-primary-400 transition-colors flex flex-col items-center gap-2 text-slate-500"
           >
             <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -144,8 +145,7 @@ export default function BarcodePage() {
           </button>
         )}
 
-        {/* Manual Input */}
-        <div className="flex gap-2">
+        <div className="card p-3 flex gap-2">
           <input
             type="text"
             inputMode="numeric"
@@ -153,27 +153,27 @@ export default function BarcodePage() {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && doSearch(code)}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="flex-1 px-4 py-3 border border-slate-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
           <button
             onClick={() => doSearch(code)}
             disabled={loading || !code.trim()}
-            className="px-5 py-3 bg-primary-600 text-white rounded-xl font-medium disabled:bg-gray-300 transition-colors"
+            className="px-5 py-3 bg-primary-600 text-white rounded-xl font-semibold disabled:bg-slate-300 transition-colors"
           >
             {loading ? '...' : t('barcode.search')}
           </button>
         </div>
       </section>
 
-      {error && <p className="text-base text-danger-600 bg-danger-50 rounded-lg px-3 py-2">{error}</p>}
+      {error && <p className="text-base text-danger-700 bg-danger-50 rounded-xl px-3 py-2 border border-danger-200">{error}</p>}
 
       {result && (
-        <section className="bg-white rounded-xl shadow p-4 space-y-4">
-          <h3 className="font-bold text-gray-800 text-lg">{result.product_name || t('barcode.title')}</h3>
-          <p className="text-sm text-gray-400">Barcode: {result.barcode}</p>
+        <section className="card p-4 space-y-4">
+          <h3 className="font-bold text-slate-900 text-lg">{result.product_name || t('barcode.title')}</h3>
+          <p className="text-sm text-slate-500">Barcode: {result.barcode}</p>
 
           {result.allergens.length > 0 ? (
-            <div className="bg-danger-50 border border-danger-200 rounded-lg p-3 space-y-2">
+            <div className="bg-danger-50 border border-danger-200 rounded-xl p-3 space-y-2">
               <p className="text-base font-semibold text-danger-700">{t('barcode.allergens_found')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {result.allergens.map((a) => (
@@ -182,15 +182,15 @@ export default function BarcodePage() {
               </div>
             </div>
           ) : (
-            <div className="bg-primary-50 border border-primary-200 rounded-lg p-3">
+            <div className="bg-primary-50 border border-primary-200 rounded-xl p-3">
               <p className="text-base text-primary-700 font-medium">{t('barcode.no_allergens')}</p>
             </div>
           )}
 
           {result.ingredients_text && (
             <div className="space-y-1">
-              <p className="text-base font-semibold text-gray-700">{t('barcode.ingredients')}</p>
-              <p className="text-base text-gray-500 leading-relaxed">{result.ingredients_text}</p>
+              <p className="text-base font-semibold text-slate-700">{t('barcode.ingredients')}</p>
+              <p className="text-base text-slate-600 leading-relaxed">{result.ingredients_text}</p>
             </div>
           )}
         </section>

@@ -10,14 +10,14 @@ export default function ResultPage() {
 
   if (!state?.result) {
     return (
-      <div className="p-6 text-center space-y-4 pt-20">
-        <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
-          <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <div className="page-shell pt-16 text-center">
+        <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center">
+          <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-        <p className="text-gray-400 text-base">{t('result.no_result')}</p>
-        <button onClick={() => navigate('/')} className="text-primary-600 font-semibold btn-press">
+        <p className="text-slate-500 text-base">{t('result.no_result')}</p>
+        <button onClick={() => navigate('/')} className="secondary-btn">
           {t('result.go_back')}
         </button>
       </div>
@@ -28,12 +28,11 @@ export default function ResultPage() {
   const hasDanger = result.allergens.length > 0
 
   return (
-    <div className="p-4 space-y-4 pb-6">
-      {/* Food Image + Name */}
+    <div className="page-shell">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative rounded-3xl overflow-hidden bg-white shadow-card"
+        className="relative rounded-3xl overflow-hidden bg-white shadow-card border border-slate-200"
       >
         {preview && <img src={preview} alt={result.food_name} className="w-full aspect-video object-cover" />}
         <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-5 pt-16">
@@ -44,14 +43,13 @@ export default function ResultPage() {
         </div>
       </motion.div>
 
-      {/* Allergy Alert */}
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
       >
         {hasDanger ? (
-          <div className="bg-gradient-to-r from-danger-50 to-danger-50/50 border border-danger-200 rounded-2xl p-4 space-y-3">
+          <div className="bg-danger-50 border border-danger-200 rounded-2xl p-4 space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 bg-danger-100 rounded-xl flex items-center justify-center">
                 <svg className="w-6 h-6 text-danger-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -69,7 +67,7 @@ export default function ResultPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-gradient-to-r from-primary-50 to-primary-50/50 border border-primary-200 rounded-2xl p-4 flex items-center gap-3">
+          <div className="bg-primary-50 border border-primary-200 rounded-2xl p-4 flex items-center gap-3">
             <div className="w-9 h-9 bg-primary-100 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -80,18 +78,17 @@ export default function ResultPage() {
         )}
       </motion.div>
 
-      {/* Ingredients */}
       <motion.section
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="bg-white rounded-2xl shadow-card p-4 space-y-3"
+        className="card p-4 space-y-3"
       >
-        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t('result.ingredients')}</h3>
+        <h3 className="section-title">{t('result.ingredients')}</h3>
         <div className="flex flex-wrap gap-2">
           {result.ingredients.map((ing) => (
             <span key={ing} className={`px-3 py-1.5 text-base rounded-lg font-medium ${
-              result.allergens.some((a) => ing.includes(a)) ? 'bg-danger-100 text-danger-700' : 'bg-gray-50 text-gray-600'
+              result.allergens.some((a) => ing.includes(a)) ? 'bg-danger-100 text-danger-700' : 'bg-slate-100 text-slate-700'
             }`}>
               {ing}
             </span>
@@ -99,14 +96,13 @@ export default function ResultPage() {
         </div>
       </motion.section>
 
-      {/* Top 3 */}
       <motion.section
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-white rounded-2xl shadow-card p-4 space-y-3"
+        className="card p-4 space-y-3"
       >
-        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t('result.top3')}</h3>
+        <h3 className="section-title">{t('result.top3')}</h3>
         {result.top3.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
             <span className={`text-sm font-bold w-6 h-6 flex items-center justify-center rounded-md ${
@@ -114,10 +110,10 @@ export default function ResultPage() {
             }`}>{i + 1}</span>
             <div className="flex-1">
               <div className="flex justify-between text-base">
-                <span className={i === 0 ? 'font-bold text-gray-800' : 'text-gray-500'}>{item.label}</span>
-                <span className="text-gray-400 text-sm">{(item.score * 100).toFixed(1)}%</span>
+                <span className={i === 0 ? 'font-bold text-slate-800' : 'text-slate-600'}>{item.label}</span>
+                <span className="text-slate-400 text-sm">{(item.score * 100).toFixed(1)}%</span>
               </div>
-              <div className="mt-1.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div className="mt-1.5 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <motion.div
                   className={`h-full rounded-full ${i === 0 ? 'bg-gradient-to-r from-primary-500 to-primary-400' : 'bg-gray-300'}`}
                   initial={{ width: 0 }}
@@ -136,7 +132,7 @@ export default function ResultPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="bg-white rounded-2xl shadow-card p-4 space-y-2"
+          className="card p-4 space-y-2"
         >
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-gradient-to-br from-primary-500 to-primary-600 rounded-md flex items-center justify-center">
@@ -144,9 +140,9 @@ export default function ResultPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t('result.ai_analysis')}</h3>
+            <h3 className="section-title">{t('result.ai_analysis')}</h3>
           </div>
-          <p className="text-base text-gray-600 leading-relaxed whitespace-pre-line">{result.claude_analysis}</p>
+          <p className="text-base text-slate-700 leading-relaxed whitespace-pre-line">{result.claude_analysis}</p>
         </motion.section>
       )}
 
@@ -155,7 +151,7 @@ export default function ResultPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="btn-press w-full py-4 rounded-2xl font-bold text-lg text-primary-600 border-2 border-primary-200 hover:bg-primary-50 transition-all"
+        className="secondary-btn"
       >
         {t('result.scan_another')}
       </motion.button>
