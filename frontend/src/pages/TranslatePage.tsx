@@ -249,7 +249,11 @@ export default function TranslatePage() {
         <button
           onClick={staffAnswer}
           disabled={listening || speaking || processing}
-          className="w-full py-3.5 rounded-xl font-semibold text-white bg-gray-700 hover:bg-gray-800 disabled:bg-gray-300 transition-colors flex items-center justify-center gap-2 shadow-sm"
+          className={`relative w-full py-3.5 rounded-xl font-semibold text-white transition-colors flex items-center justify-center gap-2 shadow-sm ${
+            listening
+              ? 'bg-danger-500 pulse-ring'
+              : 'bg-gray-700 hover:bg-gray-800 disabled:bg-gray-300'
+          }`}
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />

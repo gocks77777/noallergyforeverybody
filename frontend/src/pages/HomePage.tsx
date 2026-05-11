@@ -62,14 +62,21 @@ export default function HomePage() {
         onClick={() => fileRef.current?.click()}
       >
         {preview ? (
-          <motion.img
-            src={preview}
-            alt="food"
-            className="w-full h-full object-cover"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          />
+          <>
+            <motion.img
+              src={preview}
+              alt="food"
+              className="w-full h-full object-cover"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-4 py-2 bg-white/90 rounded-full text-sm font-semibold text-gray-700">
+                사진 변경
+              </span>
+            </div>
+          </>
         ) : (
           <div className="text-center text-gray-400 space-y-3 p-6">
             <div className="w-16 h-16 mx-auto rounded-2xl bg-gray-50 flex items-center justify-center group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors duration-300">

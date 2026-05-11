@@ -37,7 +37,14 @@ export default function ResultPage() {
       >
         {preview && <img src={preview} alt={result.food_name} className="w-full aspect-video object-cover" />}
         <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-5 pt-16">
-          <h2 className="text-2xl font-extrabold text-white tracking-tight">{result.food_name}</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-2xl font-extrabold text-white tracking-tight">{result.food_name}</h2>
+            {result.cached && (
+              <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold rounded-full border border-white/30">
+                ⚡ 캐시
+              </span>
+            )}
+          </div>
           <p className="text-base text-white/70 mt-0.5">
             {result.top3[0]?.score && `${t('result.confidence')}: ${(result.top3[0].score * 100).toFixed(1)}%`}
           </p>
