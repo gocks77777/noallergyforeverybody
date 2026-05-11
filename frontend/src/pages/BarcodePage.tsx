@@ -33,7 +33,7 @@ export default function BarcodePage() {
       setLoading(false)
       searchingRef.current = false
     }
-  }, [])
+  }, [t])
 
   function stopScan() {
     setScanning(false)
@@ -111,7 +111,7 @@ export default function BarcodePage() {
             ) : (
               /* Found overlay */
               <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
-                <div className="w-64 h-40 border-3 border-primary-400 rounded-xl flex items-center justify-center">
+                <div className="w-64 h-40 border-2 border-primary-400 rounded-xl flex items-center justify-center">
                   <svg className="w-16 h-16 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
