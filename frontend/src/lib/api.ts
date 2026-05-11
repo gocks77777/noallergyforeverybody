@@ -58,9 +58,21 @@ export async function getRestaurants(
   lng: number,
   radius = 500,
 ): Promise<Restaurant[]> {
-  const res = await fetch(`${BASE}/restaurants?lat=${lat}&lng=${lng}&radius=${radius}`)
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
-  return res.json()
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 8000)
+  try {
+    const res = await fetch(
+      `${BASE}/restaurants?lat=${lat}&lng=${lng}&radius=${radius}`,
+      { signal: controller.signal },
+    )
+    if (!res.ok) throw new Error(`${res.status}`)
+    return res.json()
+  } catch (e: any) {
+    if (e.name === 'AbortError') throw new Error('timeout')
+    throw e
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export async function getHotspots(): Promise<Hotspot[]> {
@@ -87,7 +99,16 @@ interface OverpassElement {
 
 async function fetchOverpassRestaurants(lat: number, lng: number, radius: number): Promise<Restaurant[]> {
   const query = `[out:json][timeout:15];(node(around:${radius},${lat},${lng})["amenity"~"restaurant|fast_food|cafe"];way(around:${radius},${lat},${lng})["amenity"~"restaurant|fast_food|cafe"];);out center 40;`
-  const res = await fetch(`${OVERPASS_URL}?data=${encodeURIComponent(query)}`)
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 18000)
+  let res: Response
+  try {
+    res = await fetch(`${OVERPASS_URL}?data=${encodeURIComponent(query)}`, { signal: controller.signal })
+  } catch {
+    return []
+  } finally {
+    clearTimeout(timer)
+  }
   if (!res.ok) return []
   const data = await res.json()
 
@@ -108,11 +129,21 @@ async function fetchOverpassRestaurants(lat: number, lng: number, radius: number
     .filter((r): r is Restaurant => r !== null && r.name !== 'Unknown')
 }
 
-// -- Smart restaurant fetcher: Seoul → CSV, Global → Overpass --
-export async function getSmartRestaurants(lat: number, lng: number, radius = 500): Promise<{ restaurants: Restaurant[]; source: 'seoul' | 'global' }> {
+// -- Smart restaurant fetcher: Seoul → CSV backend, fallback → Overpass --
+export async function getSmartRestaurants(
+  lat: number,
+  lng: number,
+  radius = 500,
+): Promise<{ restaurants: Restaurant[]; source: 'seoul' | 'global' }> {
   if (isInSeoul(lat, lng)) {
-    const data = await getRestaurants(lat, lng, radius)
-    return { restaurants: data, source: 'seoul' }
+    try {
+      const data = await getRestaurants(lat, lng, radius)
+      return { restaurants: data, source: 'seoul' }
+    } catch {
+      // 백엔드 콜드스타트·네트워크 오류 → Overpass로 fallback
+      const data = await fetchOverpassRestaurants(lat, lng, radius)
+      return { restaurants: data, source: 'global' }
+    }
   }
   const data = await fetchOverpassRestaurants(lat, lng, radius)
   return { restaurants: data, source: 'global' }

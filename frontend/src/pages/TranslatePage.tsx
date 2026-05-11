@@ -39,22 +39,23 @@ export default function TranslatePage() {
     setProcessing(true)
     setError('')
     try {
-      // 1. 외국인 언어 → 한국어 번역
       const korean = lang === 'ko' ? text : await translate(text, lang, 'ko')
 
-      const msg: Message = {
+      setMessages((prev) => [...prev, {
         id: ++nextIdRef.current,
         from: 'foreigner',
         original: text,
         translated: korean,
         lang,
-      }
-      setMessages((prev) => [...prev, msg])
+      }])
 
-      // 2. 한국어 TTS 재생 (식당 직원에게 들려줌)
       setSpeaking(true)
-      await speak(korean, 'ko')
-      setSpeaking(false)
+      try {
+        await speak(korean, 'ko')
+      } finally {
+        // speak()가 throw해도 반드시 speaking 해제
+        setSpeaking(false)
+      }
     } catch (e) {
       console.error(e)
       setError(t('translate.error'))
@@ -85,8 +86,11 @@ export default function TranslatePage() {
 
       // 3. 외국인 언어로 TTS 재생
       setSpeaking(true)
-      await speak(foreignText, lang)
-      setSpeaking(false)
+      try {
+        await speak(foreignText, lang)
+      } finally {
+        setSpeaking(false)
+      }
     } catch (e: any) {
       // 'aborted': 사용자가 취소, 'no-speech': 말 없이 종료 — 둘 다 에러 표시 불필요
       if (e.message !== 'aborted' && e.message !== 'no-speech') {
@@ -109,7 +113,7 @@ export default function TranslatePage() {
 
   // 커스텀 텍스트 전송
   function sendCustom() {
-    if (!customText.trim()) return
+    if (!customText.trim() || processing || speaking) return
     foreignerAsk(customText.trim())
     setCustomText('')
   }
@@ -177,11 +181,19 @@ export default function TranslatePage() {
               </p>
               {/* Replay button */}
               <button
-                onClick={() => speak(
-                  msg.from === 'foreigner' ? msg.translated : msg.translated,
-                  msg.from === 'foreigner' ? 'ko' : lang
-                )}
-                className="text-sm text-gray-400 hover:text-primary-600 flex items-center gap-1 mt-1"
+                disabled={speaking || listening}
+                onClick={async () => {
+                  setSpeaking(true)
+                  try {
+                    await speak(
+                      msg.translated,
+                      msg.from === 'foreigner' ? 'ko' : lang,
+                    )
+                  } finally {
+                    setSpeaking(false)
+                  }
+                }}
+                className="text-sm text-gray-400 hover:text-primary-600 flex items-center gap-1 mt-1 disabled:opacity-40"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M6.5 8.8l4.7-3.5v13.4l-4.7-3.5H3.5a1 1 0 01-1-1v-4.4a1 1 0 011-1h3z" />
