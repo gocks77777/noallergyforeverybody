@@ -189,8 +189,8 @@ export default function MapPage() {
       setRestaurants(data)
       setSource(src)
       if (data.length === 0) setError(t('map.no_data_here'))
-    } catch (e: any) {
-      setError(e.message)
+    } catch {
+      setError(t('map.no_data_here'))
     } finally {
       setLoading(false)
     }
@@ -243,10 +243,18 @@ export default function MapPage() {
     setLoading(true)
     setError('')
 
+    // geolocation API 자체가 없는 환경 (HTTP, 일부 브라우저) 처리
+    if (!navigator.geolocation) {
+      setError(t('map.location_denied'))
+      setLoading(false)
+      return
+    }
+
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords
-        const map = mapRef.current!
+        const map = mapRef.current
+        if (!map) { setLoading(false); return }
 
         if (userMarkerRef.current) userMarkerRef.current.remove()
         userMarkerRef.current = L.circleMarker([lat, lng], {
@@ -264,8 +272,9 @@ export default function MapPage() {
           setRestaurants(data)
           setSource(src)
           if (data.length === 0) setError(t('map.no_nearby'))
-        } catch (e: any) {
-          setError(e.message)
+        } catch {
+          // getSmartRestaurants는 내부에서 모든 에러를 처리하므로 여기까지 오면 예상 밖 오류
+          setError(t('map.no_nearby'))
         } finally {
           setLoading(false)
           setShowSearchHere(false)
@@ -275,6 +284,7 @@ export default function MapPage() {
         setError(t('map.location_denied'))
         setLoading(false)
       },
+      { timeout: 10000 },
     )
   // radius는 의도적으로 제외 — radius 변경은 searchAtCenter에서만 반영
   // eslint-disable-next-line react-hooks/exhaustive-deps

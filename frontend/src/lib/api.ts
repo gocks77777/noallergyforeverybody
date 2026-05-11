@@ -101,32 +101,31 @@ async function fetchOverpassRestaurants(lat: number, lng: number, radius: number
   const query = `[out:json][timeout:15];(node(around:${radius},${lat},${lng})["amenity"~"restaurant|fast_food|cafe"];way(around:${radius},${lat},${lng})["amenity"~"restaurant|fast_food|cafe"];);out center 40;`
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 18000)
-  let res: Response
   try {
-    res = await fetch(`${OVERPASS_URL}?data=${encodeURIComponent(query)}`, { signal: controller.signal })
+    const res = await fetch(`${OVERPASS_URL}?data=${encodeURIComponent(query)}`, { signal: controller.signal })
+    if (!res.ok) return []
+    const data = await res.json()
+    const elements: OverpassElement[] = Array.isArray(data?.elements) ? data.elements : []
+    return elements
+      .map((el) => {
+        const elLat = el.lat ?? el.center?.lat
+        const elLng = el.lon ?? el.center?.lon
+        if (!elLat || !elLng) return null
+        const tags = el.tags ?? {}
+        return {
+          name: tags.name ?? 'Unknown',
+          address: tags['addr:street'] ? `${tags['addr:street']} ${tags['addr:housenumber'] ?? ''}`.trim() : '',
+          category: tags.cuisine ?? tags.amenity ?? '',
+          lat: elLat,
+          lng: elLng,
+        } satisfies Restaurant
+      })
+      .filter((r): r is Restaurant => r !== null && r.name !== 'Unknown')
   } catch {
     return []
   } finally {
     clearTimeout(timer)
   }
-  if (!res.ok) return []
-  const data = await res.json()
-
-  return (data.elements as OverpassElement[])
-    .map((el) => {
-      const elLat = el.lat ?? el.center?.lat
-      const elLng = el.lon ?? el.center?.lon
-      if (!elLat || !elLng) return null
-      const tags = el.tags ?? {}
-      return {
-        name: tags.name ?? 'Unknown',
-        address: tags['addr:street'] ? `${tags['addr:street']} ${tags['addr:housenumber'] ?? ''}`.trim() : '',
-        category: tags.cuisine ?? tags.amenity ?? '',
-        lat: elLat,
-        lng: elLng,
-      } satisfies Restaurant
-    })
-    .filter((r): r is Restaurant => r !== null && r.name !== 'Unknown')
 }
 
 // -- Smart restaurant fetcher: Seoul → CSV backend, fallback → Overpass --
