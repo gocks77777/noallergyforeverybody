@@ -436,7 +436,9 @@ export default function MapPage() {
           </div>
 
           {/* Restaurant List */}
-          {restaurants.length === 0 && !loading ? (
+          {loading && restaurants.length === 0 ? (
+            <Skeleton count={5} />
+          ) : restaurants.length === 0 ? (
             <p className="text-center text-gray-400 py-4 text-base">{t('map.no_restaurants')}</p>
           ) : (
             <ul className="space-y-2">

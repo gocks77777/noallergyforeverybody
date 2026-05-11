@@ -18,6 +18,7 @@ export default function HomePage() {
   const [allergies, setAllergies] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isColdStart, setIsColdStart] = useState(false)
 
   function handleFile(f: File | undefined) {
     if (!f) return
@@ -41,11 +42,15 @@ export default function HomePage() {
     if (!file) return
     setLoading(true)
     setError('')
+    setIsColdStart(false)
     try {
       const result = await predictImage(file, [...allergies].join(','), lang)
       navigate('/result', { state: { result, preview } })
     } catch (e: any) {
-      setError(e.message || t('translate.error'))
+      const msg: string = e.message ?? ''
+      const isCold = msg.includes('Failed to fetch') || msg.startsWith('5') || msg.includes('503') || msg.includes('504')
+      setIsColdStart(isCold)
+      setError(isCold ? t('home.coldstart') : msg || t('translate.error'))
     } finally {
       setLoading(false)
     }
@@ -124,13 +129,21 @@ export default function HomePage() {
       </motion.section>
 
       {error && (
-        <motion.p
+        <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-base text-danger-600 bg-danger-50 rounded-2xl px-4 py-3 border border-danger-100"
+          className="bg-danger-50 rounded-2xl px-4 py-3 border border-danger-100 flex items-center justify-between gap-3"
         >
-          {error}
-        </motion.p>
+          <p className="text-base text-danger-600 flex-1">{error}</p>
+          {isColdStart && (
+            <button
+              onClick={handleAnalyze}
+              className="shrink-0 px-3 py-1.5 bg-danger-500 text-white text-sm font-semibold rounded-xl btn-press"
+            >
+              {t('home.retry')}
+            </button>
+          )}
+        </motion.div>
       )}
 
       <motion.button
