@@ -47,6 +47,25 @@ export default function SplashPage({ onDone }: Props) {
         </motion.div>
         <h1 className="text-4xl font-extrabold text-white tracking-tight">Allergy Scan</h1>
         <p className="text-white/60 mt-2 text-base font-medium">AI Food Allergy Safety Guide</p>
+
+        {/* Feature pills */}
+        <motion.div
+          className="flex flex-col gap-2 mt-7"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.35 }}
+        >
+          {[
+            { icon: '📸', text: '사진 한 장으로 알레르겐 즉시 분석' },
+            { icon: '📦', text: '바코드 스캔으로 가공식품 성분 확인' },
+            { icon: '🗺️', text: '주변 식당 알레르기 위험도 지도' },
+          ].map((f) => (
+            <div key={f.text} className="flex items-center gap-2.5 bg-white/10 border border-white/15 rounded-xl px-4 py-2.5">
+              <span className="text-lg">{f.icon}</span>
+              <span className="text-sm text-white/85 font-medium">{f.text}</span>
+            </div>
+          ))}
+        </motion.div>
       </motion.div>
 
       {/* Language Grid */}
