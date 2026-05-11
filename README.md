@@ -293,15 +293,6 @@ This project uses 3 datasets from [Seoul Open Data Plaza](https://data.seoul.go.
 | `GET` | `/hotspots` | Top 20 foreigner-dense areas with risk foods |
 | `GET` | `/health` | Server + model readiness check |
 
----
-
-## 한국어 안내
-
-이 프로젝트는 **서울 열린데이터광장 데이터 활용 경진대회 (창업 부문)** 출품작입니다.
-
-한국 음식 사진을 찍거나 바코드를 스캔하면 AI가 알레르기 위험을 분석해주는 웹앱으로, 외국인 관광객과 알레르기 환자를 위해 만들었습니다.
-
-자세한 기술 문서는 [plan.md](plan.md)를 참고하세요.
 
 ---
 
