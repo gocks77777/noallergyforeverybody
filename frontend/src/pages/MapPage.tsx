@@ -137,6 +137,7 @@ export default function MapPage() {
   const [mapInited, setMapInited] = useState(false)
   const [userAllergies, setUserAllergies] = useState<string[]>(getUserAllergies)
   const [source, setSource] = useState<'seoul' | 'global'>('seoul')
+  const [retryCount, setRetryCount] = useState(0)
 
   const mapRef = useRef<L.Map | null>(null)
   const mapElRef = useRef<HTMLDivElement>(null)
@@ -288,7 +289,7 @@ export default function MapPage() {
     )
   // radius는 의도적으로 제외 — radius 변경은 searchAtCenter에서만 반영
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, mapInited])
+  }, [tab, mapInited, retryCount])
 
   // Fetch hotspots
   useEffect(() => {
@@ -364,7 +365,15 @@ export default function MapPage() {
       )}
 
       {error && (
-        <p className="text-base text-danger-600 bg-danger-50 rounded-2xl px-3 py-2 border border-danger-100">{error}</p>
+        <div className="flex items-center gap-3 bg-danger-50 rounded-2xl px-3 py-2.5 border border-danger-100">
+          <p className="text-base text-danger-600 flex-1">{error}</p>
+          <button
+            onClick={() => { setError(''); setRestaurants([]); setRetryCount(c => c + 1) }}
+            className="shrink-0 text-sm font-semibold text-danger-600 underline"
+          >
+            재시도
+          </button>
+        </div>
       )}
 
       {/* Restaurants Tab */}

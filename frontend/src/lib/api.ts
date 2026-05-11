@@ -113,7 +113,12 @@ async function fetchOverpassRestaurants(lat: number, lng: number, radius: number
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 18000)
   try {
-    const res = await fetch(`${OVERPASS_URL}?data=${encodeURIComponent(query)}`, { signal: controller.signal })
+    const res = await fetch(OVERPASS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `data=${encodeURIComponent(query)}`,
+      signal: controller.signal,
+    })
     if (!res.ok) return []
     const data = await res.json()
     const elements: OverpassElement[] = Array.isArray(data?.elements) ? data.elements : []
@@ -145,16 +150,19 @@ export async function getSmartRestaurants(
   lng: number,
   radius = 500,
 ): Promise<{ restaurants: Restaurant[]; source: 'seoul' | 'global' }> {
-  if (isInSeoul(lat, lng)) {
-    try {
-      const data = await getRestaurants(lat, lng, radius)
-      return { restaurants: data, source: 'seoul' }
-    } catch {
-      // 백엔드 콜드스타트·네트워크 오류 → Overpass로 fallback
-      const data = await fetchOverpassRestaurants(lat, lng, radius)
-      return { restaurants: data, source: 'global' }
+  try {
+    if (isInSeoul(lat, lng)) {
+      try {
+        const data = await getRestaurants(lat, lng, radius)
+        return { restaurants: data, source: 'seoul' }
+      } catch {
+        const data = await fetchOverpassRestaurants(lat, lng, radius)
+        return { restaurants: data, source: 'global' }
+      }
     }
+    const data = await fetchOverpassRestaurants(lat, lng, radius)
+    return { restaurants: data, source: 'global' }
+  } catch {
+    return { restaurants: [], source: 'global' }
   }
-  const data = await fetchOverpassRestaurants(lat, lng, radius)
-  return { restaurants: data, source: 'global' }
 }
