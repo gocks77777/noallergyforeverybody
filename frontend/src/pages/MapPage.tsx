@@ -162,10 +162,18 @@ export default function MapPage() {
     markersRef.current.addTo(map)
     mapRef.current = map
 
-    map.on('moveend', () => setShowSearchHere(true))
+    // flyTo/setView 중에는 moveend를 무시하기 위해 플래그로 제어
+    let programmaticMove = false
+    const setProgrammatic = (v: boolean) => { programmaticMove = v }
+    ;(map as any)._setProgrammatic = setProgrammatic
+    map.on('moveend', () => { if (!programmaticMove) setShowSearchHere(true) })
     setMapInited(true)
 
-    return () => { map.remove(); mapRef.current = null }
+    return () => {
+      markersRef.current.clearLayers()
+      map.remove()
+      mapRef.current = null
+    }
   }, [])
 
   // Search at map center
@@ -229,7 +237,7 @@ export default function MapPage() {
     })
   }, [restaurants, userAllergies])
 
-  // Initial load
+  // Initial load — tab/mapInited 변경 시에만 geolocation 요청 (radius 제외)
   useEffect(() => {
     if (tab !== 'restaurants' || !mapInited) return
     setLoading(true)
@@ -246,10 +254,13 @@ export default function MapPage() {
           color: '#fff', weight: 3,
         }).addTo(map)
 
+        // flyTo 중 moveend 이벤트가 "이 위치 검색" 버튼을 오발동하지 않도록 플래그 설정
+        ;(map as any)._setProgrammatic?.(true)
         map.flyTo([lat, lng], 15, { duration: 1 })
+        map.once('moveend', () => (map as any)._setProgrammatic?.(false))
 
         try {
-          const { restaurants: data, source: src } = await getSmartRestaurants(lat, lng, radius)
+          const { restaurants: data, source: src } = await getSmartRestaurants(lat, lng, 500)
           setRestaurants(data)
           setSource(src)
           if (data.length === 0) setError(t('map.no_nearby'))
@@ -265,7 +276,9 @@ export default function MapPage() {
         setLoading(false)
       },
     )
-  }, [tab, mapInited, radius, t])
+  // radius는 의도적으로 제외 — radius 변경은 searchAtCenter에서만 반영
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, mapInited])
 
   // Fetch hotspots
   useEffect(() => {
@@ -279,7 +292,11 @@ export default function MapPage() {
   }, [tab])
 
   function jumpToSeoul() {
-    mapRef.current?.flyTo(SEOUL, 14, { duration: 1 })
+    const map = mapRef.current
+    if (!map) return
+    ;(map as any)._setProgrammatic?.(true)
+    map.flyTo(SEOUL, 14, { duration: 1 })
+    map.once('moveend', () => (map as any)._setProgrammatic?.(false))
   }
 
   return (
@@ -423,7 +440,12 @@ export default function MapPage() {
                     className="btn-press bg-white rounded-2xl shadow-soft p-3 cursor-pointer hover:shadow-card transition-all"
                     style={{ borderLeft: `3px solid ${colors.fill}` }}
                     onClick={() => {
-                      mapRef.current?.flyTo([r.lat, r.lng], 17, { duration: 0.5 })
+                      const map = mapRef.current
+                      if (map) {
+                        ;(map as any)._setProgrammatic?.(true)
+                        map.flyTo([r.lat, r.lng], 17, { duration: 0.5 })
+                        map.once('moveend', () => (map as any)._setProgrammatic?.(false))
+                      }
                       markersRef.current.eachLayer((layer) => {
                         if (layer instanceof L.CircleMarker) {
                           const pos = layer.getLatLng()

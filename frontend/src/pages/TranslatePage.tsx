@@ -88,7 +88,8 @@ export default function TranslatePage() {
       await speak(foreignText, lang)
       setSpeaking(false)
     } catch (e: any) {
-      if (e.message !== 'aborted') {
+      // 'aborted': 사용자가 취소, 'no-speech': 말 없이 종료 — 둘 다 에러 표시 불필요
+      if (e.message !== 'aborted' && e.message !== 'no-speech') {
         console.error(e)
         setError(t('translate.error'))
       }
@@ -99,12 +100,11 @@ export default function TranslatePage() {
 
   // 프리셋 질문 사용
   async function usePreset(preset: { key: string; ko: string }) {
-    // 프리셋은 영어로 되어있으므로, 현재 언어가 영어가 아니면 번역
     let displayText = preset.key
     if (lang !== 'en') {
       displayText = await translate(preset.key, 'en', lang)
     }
-    foreignerAsk(displayText)
+    await foreignerAsk(displayText)
   }
 
   // 커스텀 텍스트 전송

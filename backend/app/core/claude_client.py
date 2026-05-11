@@ -2,8 +2,8 @@
 app/core/claude_client.py — Claude 3.5 Sonnet 알레르기 분석 래퍼
 다국어 응답 지원 (language 파라미터)
 """
+import asyncio
 import os
-from functools import lru_cache
 
 import anthropic
 
@@ -35,6 +35,7 @@ def analyze_allergens(
     user_allergies: list[str],
     language: str = "ko",
 ) -> str:
+    """동기 버전 — asyncio.run_in_executor에서 호출할 때 사용."""
     lang_name = LANG_MAP.get(language, "English")
 
     dangerous = [a for a in user_allergies if a in allergens_in_food]
@@ -59,3 +60,22 @@ def analyze_allergens(
         messages=[{"role": "user", "content": user_msg}],
     )
     return message.content[0].text
+
+
+async def analyze_allergens_async(
+    food_name: str,
+    ingredients: list[str],
+    allergens_in_food: list[str],
+    user_allergies: list[str],
+    language: str = "ko",
+) -> str:
+    """비동기 래퍼 — 동기 SDK를 스레드풀에서 실행해 이벤트 루프 블로킹 방지."""
+    return await asyncio.get_event_loop().run_in_executor(
+        None,
+        analyze_allergens,
+        food_name,
+        ingredients,
+        allergens_in_food,
+        user_allergies,
+        language,
+    )

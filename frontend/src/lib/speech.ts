@@ -15,9 +15,23 @@ export function speak(text: string, lang: string): Promise<void> {
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = TTS_LANG_MAP[lang] ?? lang
     utterance.rate = 0.9
-    utterance.onend = () => resolve()
-    utterance.onerror = (e) => reject(e)
+    utterance.onend = () => {
+      clearInterval(keepAlive)
+      resolve()
+    }
+    utterance.onerror = (e) => {
+      clearInterval(keepAlive)
+      // SpeechSynthesisErrorEvent → Error 로 변환
+      reject(new Error((e as SpeechSynthesisErrorEvent).error ?? 'tts-error'))
+    }
     window.speechSynthesis.speak(utterance)
+
+    // Chrome bug: speechSynthesis stops after ~15s — keep alive with pause/resume
+    const keepAlive = setInterval(() => {
+      if (!window.speechSynthesis.speaking) { clearInterval(keepAlive); return }
+      window.speechSynthesis.pause()
+      window.speechSynthesis.resume()
+    }, 10_000)
   })
 }
 
@@ -32,12 +46,17 @@ export function listen(lang: string): Promise<string> {
     recognition.interimResults = false
     recognition.maxAlternatives = 1
 
+    let resultReceived = false
+
     recognition.onresult = (event: any) => {
-      const text = event.results[0][0].transcript
-      resolve(text)
+      resultReceived = true
+      resolve(event.results[0][0].transcript)
     }
     recognition.onerror = (event: any) => reject(new Error(event.error))
-    recognition.onend = () => {} // handled by onresult or onerror
+    // 결과 없이 종료되면 no-speech 에러로 reject (이전엔 Promise가 영원히 대기)
+    recognition.onend = () => {
+      if (!resultReceived) reject(new Error('no-speech'))
+    }
     recognition.start()
   })
 }

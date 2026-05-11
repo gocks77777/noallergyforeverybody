@@ -3,6 +3,7 @@ GET /barcode/{code}
 바코드 → 1차: Open Food Facts / 2차: 식품안전나라 + Claude 알레르기 추론
 """
 import os
+import asyncio
 import httpx
 import anthropic
 from fastapi import APIRouter, HTTPException, Query
@@ -67,8 +68,8 @@ async def _try_foodsafetykorea(code: str, client: httpx.AsyncClient) -> dict | N
         return None
 
 
-def _claude_analyze_product(product_name: str, category: str, manufacturer: str) -> dict:
-    """Claude에게 제품명으로 원재료/알레르기 추론 요청"""
+async def _claude_analyze_product(product_name: str, category: str, manufacturer: str) -> dict:
+    """Claude에게 제품명으로 원재료/알레르기 추론 요청 (async — 이벤트 루프 블로킹 방지)"""
     api_key = os.getenv("ANTHROPIC_API_KEY", "")
     if not api_key:
         return {"ingredients": "", "allergens": []}
@@ -85,21 +86,24 @@ def _claude_analyze_product(product_name: str, category: str, manufacturer: str)
         f"새우, 돼지고기, 복숭아, 토마토, 아황산류, 호두, 닭고기, 쇠고기, 오징어, 조개류, 잣"
     )
 
-    try:
-        client = anthropic.Anthropic(api_key=api_key)
-        message = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=256,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        import json
-        text = message.content[0].text.strip()
-        # JSON 부분만 추출
-        start = text.index("{")
-        end = text.rindex("}") + 1
-        return json.loads(text[start:end])
-    except Exception:
-        return {"ingredients": "", "allergens": []}
+    def _call() -> dict:
+        try:
+            import json
+            client = anthropic.Anthropic(api_key=api_key)
+            message = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=256,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            text = message.content[0].text.strip()
+            start = text.index("{")
+            end = text.rindex("}") + 1
+            return json.loads(text[start:end])
+        except Exception:
+            return {"ingredients": "", "allergens": []}
+
+    # 동기 Anthropic SDK를 스레드풀에서 실행해 이벤트 루프 블로킹 방지
+    return await asyncio.get_event_loop().run_in_executor(None, _call)
 
 
 @router.get("/{code}", response_model=BarcodeResponse)
@@ -114,7 +118,7 @@ async def get_barcode(code: str):
         kfood = await _try_foodsafetykorea(code, client)
         if kfood:
             # 3차: Claude로 제품명 기반 알레르기 추론
-            analysis = _claude_analyze_product(
+            analysis = await _claude_analyze_product(
                 kfood["product_name"],
                 kfood["category"],
                 kfood["manufacturer"],

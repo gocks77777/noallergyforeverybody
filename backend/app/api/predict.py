@@ -43,10 +43,10 @@ async def predict_image(
     except ModelNotReadyError as e:
         raise HTTPException(status_code=503, detail=str(e))
 
-    # Claude 알레르기 분석
+    # Claude 알레르기 분석 (async — 이벤트 루프 블로킹 방지)
     user_allergy_list = [a.strip() for a in allergies.split(",") if a.strip()]
     try:
-        analysis = claude_client.analyze_allergens(
+        analysis = await claude_client.analyze_allergens_async(
             food_name=result["food_name"],
             ingredients=result["ingredients"],
             allergens_in_food=result["allergens"],

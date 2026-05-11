@@ -154,30 +154,50 @@ def load_foreign_population() -> list[dict]:
     if not os.path.exists(path):
         return []
 
-    # 행정동별 외국인 합산 (시간대 무시, 최신 기준일 기준)
-    dong_totals: dict[str, float] = {}
+    # 최신 기준일의 데이터만 사용 (여러 시간대 합산 방지)
+    # CSV에 기준일 컬럼이 있으면 최신 날짜만 선택, 없으면 그냥 합산
     f = _open_csv(path)
     try:
         reader = csv.DictReader(f)
-        for row in reader:
-            try:
-                dong_code = row.get("행정동코드", "").strip()
-                chinese = float(row.get("중국인체류인구수", 0) or 0)
-                others = float(row.get("중국외외국인체류인구수", 0) or 0)
-                foreign_total = chinese + others
-                dong_totals[dong_code] = dong_totals.get(dong_code, 0) + foreign_total
-            except (ValueError, TypeError):
-                continue
+        all_rows = list(reader)
     finally:
         f.close()
 
+    # 기준일 컬럼 탐지 (기준일, 기준_일자, 날짜 등)
+    date_col = None
+    if all_rows:
+        for candidate in ("기준일", "기준_일자", "날짜", "기준일자", "조사일자"):
+            if candidate in all_rows[0]:
+                date_col = candidate
+                break
+
+    # 최신 기준일만 필터링
+    if date_col:
+        latest = max((r.get(date_col, "").strip() for r in all_rows), default="")
+        all_rows = [r for r in all_rows if r.get(date_col, "").strip() == latest]
+
+    # 행정동별 외국인 합산 (동일 기준일 내 시간대는 평균으로 처리)
+    dong_sums: dict[str, list[float]] = {}
+    for row in all_rows:
+        try:
+            dong_code = row.get("행정동코드", "").strip()
+            if not dong_code:
+                continue
+            chinese = float(row.get("중국인체류인구수", 0) or 0)
+            others = float(row.get("중국외외국인체류인구수", 0) or 0)
+            dong_sums.setdefault(dong_code, []).append(chinese + others)
+        except (ValueError, TypeError):
+            continue
+
     rows = []
-    for dong_code, total in dong_totals.items():
+    for dong_code, values in dong_sums.items():
         dong_name = _get_dong_name(dong_code)
+        # 시간대 여러 개면 평균, 아니면 단일 값 사용
+        avg = sum(values) / len(values)
         rows.append({
             "dong_name": dong_name,
             "dong_code": dong_code,
-            "foreign_count": round(total, 1),
+            "foreign_count": round(avg, 1),
         })
 
     print(f"[data] 외국인 생활인구 {len(rows)}개 행정동 로드 완료")
