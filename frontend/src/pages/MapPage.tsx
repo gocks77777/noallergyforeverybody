@@ -296,8 +296,11 @@ export default function MapPage() {
     setLoading(true)
     setError('')
     getHotspots()
-      .then(setHotspots)
-      .catch((e) => setError(e.message))
+      .then((data) => {
+        setHotspots(data)
+        if (data.length === 0) setError(t('map.no_hotspots'))
+      })
+      .catch(() => setError(t('map.no_hotspots')))
       .finally(() => setLoading(false))
   }, [tab])
 

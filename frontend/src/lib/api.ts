@@ -76,9 +76,17 @@ export async function getRestaurants(
 }
 
 export async function getHotspots(): Promise<Hotspot[]> {
-  const res = await fetch(`${BASE}/hotspots`)
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
-  return res.json()
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 8000)
+  try {
+    const res = await fetch(`${BASE}/hotspots`, { signal: controller.signal })
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 // -- Seoul bounds check --
