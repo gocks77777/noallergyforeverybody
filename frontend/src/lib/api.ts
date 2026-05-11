@@ -95,7 +95,10 @@ function isInSeoul(lat: number, lng: number): boolean {
 }
 
 // -- Overpass API (Global restaurants) --
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter'
+// 프로덕션(Vercel)에서는 /overpass 프록시를 통해 CORS 우회
+const OVERPASS_URL = import.meta.env.DEV
+  ? 'https://overpass-api.de/api/interpreter'
+  : '/overpass'
 
 interface OverpassElement {
   id: number

@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://cleaningsource-allergy-scan-api.hf.space/:path*"
+    },
+    {
+      "source": "/overpass",
+      "destination": "https://overpass-api.de/api/interpreter"
     }
   ],
   "crons": [
