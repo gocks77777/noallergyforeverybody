@@ -1,314 +1,64 @@
-# 🍜 Allergy Scan — AI Food Allergy Safety for Everyone
+# NoAllergy (Allergy Scan) — 음식 사진으로 알레르기 성분 판정
 
-> **Scan food. Stay safe. In any language.**
+한국 음식 사진이나 바코드를 찍으면 알레르기 위험 성분을 알려주는 웹앱입니다.
+서울시 열린데이터광장 데이터 활용 경진대회(창업 부문, 2026.05) 출품작. 설계부터 배포까지 혼자 만들었습니다.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20App-10b981?style=for-the-badge)](https://frontend-gocks77777s-projects.vercel.app)
-[![Backend API](https://img.shields.io/badge/API-HuggingFace%20Spaces-yellow?style=for-the-badge)](https://cleaningsource-allergy-scan-api.hf.space/health)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+## 문제
 
----
+외국인 관광객은 한국 음식의 성분을 알 방법이 거의 없습니다. 메뉴판에 알레르겐 표기가 없고, 라벨은 한국어뿐이고, 직원에게 물어보기도 어렵습니다.
+사진 한 장으로 답을 주려면 두 가지를 동시에 풀어야 했습니다. 오답을 내면 안 되고, GPU 서버를 쓸 돈이 없습니다.
 
-## The Problem
+## 판단
 
-Every year, millions of tourists visit Korea. Many have food allergies — but Korean menus rarely list allergens, ingredient labels are in Korean only, and language barriers make it nearly impossible to ask staff about ingredients.
-
-**Allergy Scan** solves this: **take a photo of any Korean food → instantly know what allergens it contains → communicate with restaurant staff in your language.**
-
-## Key Features
-
-| Feature | How it works |
-|---|---|
-| 📸 **Food Photo Recognition** | ViT deep learning model identifies Korean food → maps to ingredients → Claude AI analyzes allergy risks |
-| 📱 **Barcode Scanner** | Camera scan or manual input → Open Food Facts → Korea Food Safety API → Claude fallback (3-tier) |
-| 🗺️ **Restaurant Map** | GPS-based nearby restaurants from Seoul public data (119K+ restaurants), coordinate conversion |
-| ⚠️ **Foreigner Hotspot Alerts** | Foreign population data × restaurant category analysis → area-specific allergen risk foods |
-| 🗣️ **Two-way Interpreter** | 10 languages, STT/TTS — talk to Korean staff about your allergies in real time |
-| 🌐 **Full Multilingual UI** | Korean, English, Japanese, Chinese, Spanish, French, German, Vietnamese, Thai, Arabic |
-
----
-
-## Architecture
-
-```mermaid
-graph TB
-    User([👤 User — Mobile Browser])
-
-    subgraph Vercel["☁️ Vercel — Frontend"]
-        PWA[React PWA<br/>10 Languages · Tailwind]
-    end
-
-    subgraph HF["🤗 HuggingFace Spaces — Backend"]
-        API[FastAPI]
-        subgraph Predict["/predict"]
-            ONNX[ONNX Runtime<br/>ViT-base 150 classes]
-            MAP[Ingredient Map<br/>229 foods]
-            CLAUDE[Claude API<br/>Allergy Analysis]
-            CACHE[(SQLite Cache)]
-        end
-        subgraph Barcode["/barcode/{code}"]
-            OFF[Open Food Facts]
-            KFOOD[Korea Food Safety API]
-            CLAUDE2[Claude Fallback]
-        end
-        subgraph Geo["/restaurants · /hotspots"]
-            CSV1[Seoul Restaurants<br/>119K · TM→WGS84]
-            CSV2[Foreign Population<br/>424 districts]
-        end
-    end
-
-    User --> PWA
-    PWA --> API
-    API --> Predict
-    API --> Barcode
-    API --> Geo
-    ONNX --> MAP --> CLAUDE --> CACHE
-    OFF -.->|miss| KFOOD -.->|miss| CLAUDE2
-```
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Frontend** | React 18 + TypeScript + Vite + Tailwind CSS (PWA) |
-| **Backend** | FastAPI + ONNX Runtime + Anthropic Claude API + SQLite |
-| **ML Model** | `google/vit-base-patch16-224` fine-tuned, 150 classes, 134,476 images, **94.6% accuracy** |
-| **Public Data** | Seoul Open Data Plaza: OA-20918 (food ingredients), OA-16094 (restaurants), OA-14993 (foreign population) |
-| **External APIs** | Open Food Facts (2.7M+ products), Korea Food Safety API |
-| **Infra** | Vercel (frontend) + HuggingFace Spaces Docker (backend) |
-| **Total Cost** | **~$4** for the entire competition period |
-
----
-
-## Model Performance
-
-Trained on **134,476 images** across **150 Korean food classes** using Google Colab free T4 GPU.
-
-| Metric | Value |
-|---|---|
-| **Best Validation Accuracy** | **94.62%** |
-| Best Checkpoint | Epoch 10, Step 18,920 |
-| Training Time | ~30 min (10 epochs, FP16, batch 64) |
-| Model Size | 335 MB (ONNX FP32) |
-| Inference Latency | ~1.0s (CPU) |
-
-**Accuracy by Epoch:**
-```
-Epoch  1 ████████░░░░░░░░░░░░  72.6%
-Epoch  2 ████████████░░░░░░░░  81.2%
-Epoch  3 █████████████░░░░░░░  83.6%
-Epoch  4 █████████████░░░░░░░  85.2%
-Epoch  5 █████████████░░░░░░░  85.7%
-Epoch  6 █████████████░░░░░░░  86.4%
-Epoch  7 █████████████░░░░░░░  86.7%
-Epoch 10 ███████████████████░  94.6%  ← Best
-```
-
----
-
-## 🌍 Global Contribution Guide
-
-### Your Country, Your Food, Your Contribution
-
-This project currently supports **Korean food only** — but it's designed so that **anyone from any country can add their own cuisine using the exact same pipeline.**
-
-> *Imagine a Japanese tourist in Thailand photographs Pad Thai and instantly knows it contains their allergens — because a Thai contributor trained the model with Thai food data. A Brazilian in Japan scans Ramen and gets warned about wheat. An Indian in Korea photographs Kimchi Jjigae and sees it's safe for them.*
->
-> **That future is possible if people from each country contribute their food data.**
-
-### How to Add Your Country's Food
-
-```
-Step 1: Collect       Step 2: Train       Step 3: Convert      Step 4: Submit
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ Public food  │     │ Fine-tune   │     │ Export to   │     │ Open a      │
-│ data from    │ ──► │ ViT model   │ ──► │ ONNX format │ ──► │ Pull Request│
-│ your country │     │ (Colab T4)  │     │             │     │             │
-└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
-```
-
-#### Step 1 — Collect Public Food Data
-Find your country's public food/ingredient/allergen datasets. Examples:
-- 🇯🇵 Japan: [e-Stat](https://www.e-stat.go.jp/) food composition database
-- 🇹🇭 Thailand: [Thai FDA](https://www.fda.moph.go.th/) food data
-- 🇺🇸 USA: [USDA FoodData Central](https://fdc.nal.usda.gov/)
-- 🇪🇺 EU: [Open Food Facts](https://world.openfoodfacts.org/)
-
-#### Step 2 — Build Image Dataset
-- Minimum **50 classes**, **500+ images per class** recommended
-- 224×224 px JPEG format
-- See `preprocess.py` for our preprocessing pipeline
-- Structure: `data/{country_code}/{food_class}/img_001.jpg`
-
-#### Step 3 — Fine-tune ViT Model
-```bash
-# Use our training notebook — runs on free Google Colab T4
-notebooks/train.ipynb
-```
-- Base model: `google/vit-base-patch16-224`
-- ~26 min for 10 epochs on Colab free T4
-- FP16 training, batch size 64
-
-#### Step 4 — Create Ingredient-Allergen Mapping
-```bash
-# Reference: build_ingredient_map.py
-# Output format:
-{
-  "pad_thai": {
-    "ingredients": ["rice noodles", "shrimp", "peanuts", "egg", "fish sauce"],
-    "allergens": ["갑각류", "땅콩", "계란", "생선"]
-  }
-}
-```
-
-#### Step 5 — Convert to ONNX & Submit PR
-```bash
-# Convert your trained model
-python -c "from optimum.onnxruntime import ORTModelForImageClassification; ..."
-
-# Then open a Pull Request with:
-# - ONNX model file
-# - labels.json (class names)
-# - label_ingredient_map.json (ingredient + allergen mapping)
-# - Country-specific data files
-```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed requirements and PR review criteria.
-
----
-
-## Getting Started
-
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-
-### Backend
-```bash
-cd backend
-pip install -r requirements.txt
-
-# Set environment variables
-export ANTHROPIC_API_KEY=your_key_here    # Required for Claude analysis
-export KFOOD_API_KEY=your_key_here        # Optional: Korea Food Safety API
-
-# Run
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-# Opens at https://localhost:5173 (HTTPS required for camera/mic access)
-```
-
-### Environment Variables
-
-| Variable | Required | Description |
+| 문제 | 선택 | 버린 대안 |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | For Claude analysis | Claude API key from [Anthropic Console](https://console.anthropic.com/) |
-| `KFOOD_API_KEY` | Optional | Korea Food Safety API key |
-| `DATA_DIR` | Optional | Path to data directory (default: `data/`) |
-| `CACHE_DB` | Optional | SQLite cache path (default: `cache.db`) |
+| 오답 위험 | 답을 3단계로 막음: 공공데이터 성분 매핑 → 실패 시 Claude API 추론 → 결과 해시 캐시. 응답에 근거를 함께 표시 | LLM 단독 추론 (근거 없이 그럴듯한 오답) |
+| GPU 비용 | ViT 파인튜닝 모델을 ONNX로 변환해 CPU 추론 (HuggingFace Spaces 무료 티어) | GPU 인스턴스 (월 수십 달러) |
+| 데이터 결합 | 서울시 식재료 정보 × 일반음식점 인허가 × 단기체류 외국인 생활인구를 묶어 "외국인 밀집 지역별 위험 음식" 제공 | 단일 데이터셋 |
 
----
+## 결과
 
-## Project Structure
+- ViT-base 150 클래스(134K 이미지) 파인튜닝, ONNX Runtime CPU 추론
+- 음식 229종 → 성분 매핑, 서울시 식당 119K건 좌표 변환(TM → WGS84), 행정동 424개 외국인 인구
+- 10개 언어 UI, 바코드(Open Food Facts → 식약처 API → Claude 폴백), 음성 통역(STT/TTS)
+- 경진대회 기간 누적 인프라 비용 $4
+
+## 현재 상태
+
+프론트는 Vercel에 배포되어 있으나, 백엔드의 Claude API 키를 비용 문제로 빼둔 상태라 사진 분석 결과 단계는 현재 동작하지 않습니다. 로컬에서 키를 넣으면 전체 흐름이 돕니다.
+
+## 구조
 
 ```
-noallergyforeveryone/
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   │   ├── predict.py          # POST /predict — image → food → allergens
-│   │   │   ├── barcode.py          # GET /barcode/{code} — 3-tier fallback
-│   │   │   ├── restaurants.py      # GET /restaurants — nearby Seoul restaurants
-│   │   │   └── hotspots.py         # GET /hotspots — foreigner risk areas
-│   │   ├── core/
-│   │   │   ├── model.py            # ONNX ViT inference engine
-│   │   │   ├── claude_client.py    # Claude API wrapper (10 languages)
-│   │   │   ├── data.py             # CSV loaders, coordinate conversion
-│   │   │   └── cache.py            # SQLite prediction cache
-│   │   └── main.py                 # FastAPI app + lifespan
-│   ├── data/                       # Seoul public CSV data
-│   ├── models/                     # ONNX model + labels
-│   ├── Dockerfile                  # HuggingFace Spaces deployment
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── HomePage.tsx        # Camera/upload + allergy selection
-│   │   │   ├── ResultPage.tsx      # Analysis results + Claude insights
-│   │   │   ├── BarcodePage.tsx     # Camera barcode scanner
-│   │   │   ├── MapPage.tsx         # Leaflet map + restaurant list
-│   │   │   ├── TranslatePage.tsx   # Two-way STT/TTS interpreter
-│   │   │   └── SplashPage.tsx      # Language selection
-│   │   ├── lib/
-│   │   │   ├── api.ts              # Backend API client
-│   │   │   ├── i18n.ts             # 10-language translations
-│   │   │   ├── speech.ts           # Web Speech API (TTS/STT)
-│   │   │   └── translate.ts        # MyMemory translation API
-│   │   └── App.tsx                 # Router + layout
-│   └── vite.config.ts
-├── notebooks/
-│   ├── train.ipynb                 # ViT fine-tuning (Colab T4)
-│   └── setup_drive.ipynb           # Colab Drive setup
-├── scripts/
-│   ├── validate_dataset.py         # Image quality validation
-│   ├── validate_csv.py             # CSV format validation
-│   ├── expand_ingredient_map.py    # Ingredient map expansion
-│   └── verify_mapping.py           # Mapping verification
-├── build_ingredient_map.py         # Generate ingredient-allergen JSON
-├── preprocess.py                   # Image preprocessing pipeline
-├── CONTRIBUTING.md                 # Contribution guidelines
-└── plan.md                         # Full technical specification
+backend/            FastAPI (HuggingFace Spaces, Docker)
+  app/api/          predict · barcode · restaurants · hotspots
+  app/core/         model(ONNX 로드) · claude_client · cache(SQLite) · data(CSV 파싱)
+  data/             label_ingredient_map.json, dong_names.json
+frontend/           React 18 + Vite + Tailwind PWA
+  src/pages/        Splash · Home · Result · Barcode · Map · Translate
+  src/lib/          api · i18n(10개 언어) · speech · translate
+notebooks/          train.ipynb (Colab T4, FP16, 10 epoch ≈ 26분)
+scripts/            데이터셋 검증, 성분 매핑 확장
 ```
 
----
+## 실행
 
-## Seoul Open Data Used
+```bash
+# backend
+cd backend && pip install -r requirements.txt
+export ANTHROPIC_API_KEY=...        # 없으면 성분 매핑 단계까지만 동작
+uvicorn app.main:app --port 7860    # /health 로 모델 로드 확인
 
-This project uses 3 datasets from [Seoul Open Data Plaza](https://data.seoul.go.kr/) (서울 열린데이터광장):
+# frontend
+cd frontend && npm install && npm run dev
+```
 
-| Dataset | ID | Usage |
-|---|---|---|
-| Public Meal Top Ingredients | OA-20918 | Food → ingredient mapping for allergy detection |
-| Restaurant Permits | OA-16094 | 119K+ restaurant locations for nearby search |
-| Short-term Foreign Population | OA-14993 | Foreigner density → area-specific allergy risk alerts |
+## API
 
-**Cross-domain data fusion** (Food × Population) enables location-aware allergen warnings — a key differentiator for the competition.
-
----
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/predict` | Image → food name (top-3) + ingredients + allergen analysis |
-| `GET` | `/barcode/{code}` | Barcode → product info + allergens (3-tier fallback) |
-| `GET` | `/restaurants?lat=&lng=&radius=` | Nearby restaurants within radius |
-| `GET` | `/hotspots` | Top 20 foreigner-dense areas with risk foods |
-| `GET` | `/health` | Server + model readiness check |
-
-
----
-
-## License
-
-MIT License — see [LICENSE](LICENSE) for details.
-
-## Contact
-
-**정해찬** (Haechan Jeong)
-- Email: gocks77777@naver.com
-- GitHub: [@gocks77777](https://github.com/gocks77777)
-
----
-
-<p align="center">
-  <em>Started as a Seoul data competition entry. Growing into a global food safety platform.</em><br/>
-  <strong>Every country that contributes makes the world safer for everyone with food allergies.</strong>
-</p>
+| 경로 | 역할 |
+|---|---|
+| `POST /predict` | 사진 → 음식 분류 → 성분 → 알레르기 분석 |
+| `GET /barcode/{code}` | 바코드 → 가공식품 성분 (3단계 폴백) |
+| `GET /restaurants` | 좌표 기준 주변 식당 |
+| `GET /hotspots` | 외국인 밀집 지역 × 위험 음식 |
+| `GET /health` | 모델 준비 상태 |
